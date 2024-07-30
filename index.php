@@ -59,7 +59,7 @@
               <td></td>
               <input type="submit" class="btn btn-primary btn-block" value="Iniciar Sesión">
             </form>
-            <p></p>              
+                    
           </div>
         </div>
       </div>
