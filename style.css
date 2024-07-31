@@ -4,17 +4,7 @@
   width: 100%; /* Ocupa el ancho completo del contenedor */
   height: auto; /* Altura ajustada automáticamente para mantener la proporción */
 }
-/*
-nav {
-  background-color: #000000;
-   Color de fondo gris 
-  display: flex;
-  
-  align-items: center;
-  /* Alinea verticalmente los elementos 
-  height: 100px;
-  padding: 0 40px
-}*/
+
 .dato{
   font-size: 24px;
 }
@@ -25,68 +15,19 @@ nav {
 .foto{
   size: 400px;
 }
-/*nav ul {
-  display: flex;
-  justify-content: center;
-  padding: 0;
-  margin: 0;
+#intro {
+  background-image: url(descarga.jpg);
+  height: 100vh;
+  background-size:cover;
 }
 
-nav li {
-  list-style-type: none;
-  padding: 10px 30px;
-}
 
-nav a {
-  font-family: Arial, sans-serif;
-  text-decoration: none;
-  color: gray;
-  padding: 20px 40px;
-}
-
-nav a:hover {
-  background-color: #555;
-  color: white;
-}
-.nave {
-  position: relative;
-  top: 50px;
-left: 457px;;
-  cursor: pointer;
-}
-@media screen and (max-width: 1024px) {
-  nav {
-    padding: 0 20px;
-  }
-
-  .nave {
-    position: relative;
-    top: 18px;
-left: 270px;;
-    cursor: pointer;
+@media (min-width: 992px) {
+  #intro {
+    margin-top: -58.59px;
   }
 }
 
-
-
-.fondo {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 3%;
-  height: 25rem;
+.navbar .nav-link {
+  color: #fff !important;
 }
-
-
-
-@media screen and (max-width: 987px) {
-  nav {
-    padding: 0 20px;
-  }
-
-  .nave {
-    position: relative;
-    top: 18px;
-left: 170px;;
-    cursor: pointer;
-  }
-}
-*/
