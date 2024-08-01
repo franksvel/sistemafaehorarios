@@ -15,7 +15,7 @@
                 <h4>Iniciar sesión</h4>
                 </div>
                 <div class="card-body">
-                <form action="validar.php" method="POST">
+                <form action="login.php" method="POST">
                 <div class="form-group">
                 <label for="email">Correo electrónico</label>
                 <input type="email" class="form-control" name="usuario" placeholder="Introduce tu correo electrónico" >

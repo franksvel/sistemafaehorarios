@@ -66,7 +66,6 @@ try {
                 <img src="<?= htmlspecialchars($userInfo->picture) ?>" class="mr-3" alt="Perfil" style="width: 100px; height: 100px; border-radius: 50%;">
                 <div class="media-body">
                     <h5 class="mt-0"><?= htmlspecialchars($userInfo->name) ?></h5>
-                    <p><?= htmlspecialchars($userInfo->email) ?></p>
                 </div>
             <?php else: ?>
                 <p>No se pudo obtener la información del perfil.</p>
