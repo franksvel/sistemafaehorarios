@@ -7,7 +7,8 @@ $client = new Google_Client();
 $client->setClientId('737255136278-udfv56p46c9u8tqo6l61kt251aodu28p.apps.googleusercontent.com');
 $client->setClientSecret('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');
 $client->setRedirectUri('http://localhost/sistemafaehorarios/auth.php');
-$client->addScope(Google_Service_Gmail::GMAIL_READONLY);
+$client->addScope(Google_Service_Oauth2::USERINFO_PROFILE);
+$client->addScope(Google_Service_Oauth2::USERINFO_EMAIL);
 
 if (!isset($_SESSION['access_token']) || $_SESSION['access_token'] === null) {
     header('Location: http://localhost/sistemafaehorarios/index.php');
@@ -15,9 +16,16 @@ if (!isset($_SESSION['access_token']) || $_SESSION['access_token'] === null) {
 }
 
 $client->setAccessToken($_SESSION['access_token']);
-$service = new Google_Service_Gmail($client);
+$oauth2 = new Google_Service_Oauth2($client);
 
-
+try {
+    // Obtener información del perfil
+    $userInfo = $oauth2->userinfo->get();
+} catch (Exception $e) {
+    // Muestra un mensaje de error si no se puede obtener la información
+    echo 'Error: ' . htmlspecialchars($e->getMessage());
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -25,7 +33,7 @@ $service = new Google_Service_Gmail($client);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Gmail</title>
+    <title>Perfil</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
@@ -51,11 +59,19 @@ $service = new Google_Service_Gmail($client);
                 </ul>
             </div>
         </nav>
-        
-        <h1 class="mt-4">Horarios escolares</h1>
-        <ul class="list-group mt-3">
-        
-        </ul>
+
+        <h1 class="mt-4">Perfil</h1>
+        <div class="media">
+            <?php if (isset($userInfo)): ?>
+                <img src="<?= htmlspecialchars($userInfo->picture) ?>" class="mr-3" alt="Perfil" style="width: 100px; height: 100px; border-radius: 50%;">
+                <div class="media-body">
+                    <h5 class="mt-0"><?= htmlspecialchars($userInfo->name) ?></h5>
+                    <p><?= htmlspecialchars($userInfo->email) ?></p>
+                </div>
+            <?php else: ?>
+                <p>No se pudo obtener la información del perfil.</p>
+            <?php endif; ?>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

@@ -23,5 +23,5 @@ if (isset($_SESSION['access_token'])) {
 }
 
 // Redirige al inicio
-header('Location: index.html');
+header('Location: index.php');
 exit();
