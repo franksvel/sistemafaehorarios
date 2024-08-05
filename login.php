@@ -4,7 +4,7 @@ session_start();
 include 'db.php';
 
 if (!isset($_POST['usuario']) || !isset($_POST['contra'])) {
-    header("Location: index.php");
+    header("Location: dashboard.php");
     exit();
 }
 

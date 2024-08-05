@@ -25,7 +25,7 @@ $service = new Google_Service_Gmail($client);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Dashboard de Gmail</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -45,7 +45,7 @@ $service = new Google_Service_Gmail($client);
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="perfil.php">Perfil</a>
-                            <a class="dropdown-item" href="configuracion.php">Configuración</a>
+                            <a class="dropdown-item" href="#">Configuración</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
                         </div>
@@ -54,32 +54,65 @@ $service = new Google_Service_Gmail($client);
             </div>
         </nav>
         
-        <h1 class="mt-4"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-clock" width="80" height="80" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <h1 class="mt-4"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-settings" width="80" height="80" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M10.5 21h-4.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v3" />
-  <path d="M16 3v4" />
-  <path d="M8 3v4" />
-  <path d="M4 11h10" />
-  <path d="M18 18m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-  <path d="M18 16.5v1.5l.5 .5" />
-</svg>Horarios escolares</h1>
+  <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+  <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+</svg>Configuración</h1>
         <ul class="list-group mt-3">
         
         </ul>
     </div>
+
     <div class="card-container">
         <div class="card">
-            <i class="fas fa-plus card-icon"></i>
-            <h2 class="card-title">Generar</h2>
-            <p class="card-description">Está diseñado para optimizar el tiempo en un formato compacto.</p>
+            <i class="fas fa-person card-icon"></i>
+            <h2 class="card-title">Roles</h2>
+            <p class="card-description">Explora nuestras opciones para el hogar.</p>
+        </div>
+        <div class="card">
+            <i class="fas fa-user card-icon"></i>
+            <h2 class="card-title">Usuarios</h2>
+            <p class="card-description">Encuentra soluciones para tu entorno laboral.</p>
+        </div>
+        <div class="card">
+            <i class="fas fa-chalkboard-user card-icon"></i>
+            <h2 class="card-title">Docentes</h2>
+            <p class="card-description">Mejora tu salud con nuestros consejos.</p>
+        </div>
+        <div class="card">
+            <i class="fas fa-book card-icon"></i>
+            <h2 class="card-title">Materia</h2>
+            <p></p>
+        </div>
+    </div>
+    
+    <div class="card-container">
+        <div class="card">
+            <i class="fas fa-school card-icon"></i>
+            <h2 class="card-title">Carrera</h2>
+            <p class="card-description">Explora nuestras opciones para el hogar.</p>
         </div>
         <a href="dashboard.php">
         <div class="card">
-            <i class="fas fa-eye card-icon"></i>
-            <h2 class="card-title">Visualizar</h2>
-            <p class="card-description">Visualiza los horarios elaborados y realiza busquedas de manera sencilla</p>
+            <i class="fas fa-briefcase card-icon"></i>
+            <h2 class="card-title">Disponibilidad</h2>
+            <p class="card-description">Encuentra soluciones para tu entorno laboral.</p>
+        </div>
+         </a>
+        <div class="card">
+            <i class="fas fa-clock card-icon"></i>
+            <h2 class="card-title">Horarios</h2>
+            <p class="card-description">Mejora tu salud con nuestros consejos.</p>
+        </div>
+        <div class="card">
+            <i class="fas fa-headset card-icon"></i>
+            <h2 class="card-title">Soporte</h2>
+            <p></p>
         </div>
     </div>
+    
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

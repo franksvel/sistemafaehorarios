@@ -28,6 +28,16 @@ try {
 }
 ?>
 
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -51,7 +61,7 @@ try {
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="perfil.php">Perfil</a>
-                            <a class="dropdown-item" href="#">Configuración</a>
+                            <a class="dropdown-item" href="configuracion.php">Configuración</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
                         </div>
@@ -72,6 +82,9 @@ try {
             <?php endif; ?>
         </div>
     </div>
+    
+
+    
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
