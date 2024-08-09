@@ -1,25 +1,4 @@
-/* Estilos generales */
 
-.col img {
-  width: 100%; /* Ocupa el ancho completo del contenedor */
-  height: auto; /* Altura ajustada automáticamente para mantener la proporción */
-}
-
-.dato{
-  font-size: 24px;
-}
-
-.nosotros{
-  font-size: 20px;
-}
-.foto{
-  size: 400px;
-}
-#intro {
-  background-image: url(descarga.jpg);
-  height: 100vh;
-  background-size:cover;
-}
 
 
 @media (min-width: 992px) {

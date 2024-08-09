@@ -35,11 +35,11 @@ $service = new Google_Service_Gmail($client);
 </head>
 <body>
     <div class="container mt-5">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="dashboard.php">Dashboard</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="dashboard.php">Dashboard</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+    </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
@@ -58,51 +58,36 @@ $service = new Google_Service_Gmail($client);
         </nav>
         
 
-        <h1 class="mt-4 d-flex"><i class="fa-solid fa-book m-2"></i>Materia</h1>
-        <ul class="list-group mt-3">
-        
-        </ul>
+     <h1 class="mt-4 d-flex"><i class="fa-solid fa-book m-2"></i>Materia</h1>
     </div>
     <div class="container">
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-  Agregar Materia
-</button> 
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Agregar Materia</button> 
     </div>
 
 
     <div class="container">
     <table class="table m-2 mt-4">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre(s)</th>
-        <th>Accion</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Nombre(s)</th><th>Accion</th></tr></thead>
     <tbody>
     <?php
         include 'db.php';
-        $sql="SELECT * FROM asignatura ";
+        $sql="SELECT * FROM materia ";
         $result=mysqli_query($conexion,$sql);
         while($mostrar=mysqli_fetch_array($result)){
 
-        ?>
+    ?>
         <tr>
-            <td><?php echo $mostrar ['id_registro']?></td>
-            <td><?php echo $mostrar ['id_materia']?></td>
-            <td><?php echo $mostrar ['id_semestre']?></td>
+            <td><?php echo $mostrar ['nombre_materia']?></td>
             <td>
-            <a class="btn btn-danger" href="borrarmate.php?id_materia=<?php echo urlencode($mostrar['id_materia']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
-            <a class="btn btn-warning" href="borrarmate.php?id_materia=<?php echo urlencode($mostrar['id_materia']); ?>"><i class="fa-sharp fa-solid fa-pencil"></i></a>
-           
-            </td>
+            <a class="btn btn-danger" href="borrarmateria.php?id_materia=<?php echo urlencode($mostrar['id_materia']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal1">
+            <i class="fa-sharp fa-solid fa-pencil"></i></button> </td>
         </tr>
     <?php
         }
     ?>
-     
     </tbody>
-  </table>
+    </table>
     </div>
 
 
@@ -110,111 +95,66 @@ $service = new Google_Service_Gmail($client);
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Agregar datos del docente</h5>
+        <h5 class="modal-title" id="exampleModalLabel">Agregar datos de la materia</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-      <form action="" id="formulario" method="POST">
+      <form action="guardarregistro.php" method="POST">
     <div class="form-group">
       <label for="nombre">Materia*</label>
-      <input type="text" id="nombre" class="form-control"placeholder="Ingrese la materia" required name="nombre">
+      <input type="text" id="nombre" class="form-control"placeholder="Ingrese la materia" required name="nombre_materia">
       <small  class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
     </div>
-    <div class="form-group">
-    <label for="semestre">Semestre</label>
-                            <select name="id_semestre" id="semestre" class="form-control">
-                                <?php
-                                $query = "SELECT * FROM semestre ORDER BY id_semestre";
-                                $result = mysqli_query($conexion, $query);
-                                while ($row = mysqli_fetch_array($result)) {
-                                    $id = $row['id_semestre'];
-                                    $nombre = $row['nombre'];
-                                    echo "<option value='$id'>$nombre</option>";
-
-                                }
-                                ?>
-                            </select>
-      
-    </div>
-    <div class="form-group">
-    </div>
+    <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
   </form>
-  <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
+  
 
       </div>
-      <div class="modal-footer">
-
-      </div>
+   
     </div>
   </div>
 </div>
 <script>
-$(document).ready(function() {
-    // Manejar el evento de clic en el botón de guardar
-    $('#mostrarAlerta').on('click', function(event) {
-        event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-
-        // Obtener el valor del input
-        const nombre = $('#nombre').val();
-
-        // Validar si el campo está vacío
-        if (nombre.trim() === '') {
-            Swal.fire({
-                title: 'Error',
-                text: 'El campo de nombre no puede estar vacío.',
-                icon: 'error',
-                confirmButtonText: 'Cerrar'
-            });
-            return; // Detener la ejecución si el campo está vacío
-        }
-
-        // Simular el guardado de datos
-        guardarDatos(nombre).then(() => {
-            // Mostrar alerta de éxito si los datos se guardaron
-            Swal.fire({
-                title: '¡Éxito!',
-                text: 'Se guardaron los datos exitosamente.',
-                icon: 'success',
-                confirmButtonText: 'Cerrar'
-            }).then(() => {
-                // Mostrar mensaje después de cerrar el modal
-                mostrarMensaje();
-            });
-        }).catch(() => {
-            // Mostrar alerta de error si los datos no se guardaron
-            Swal.fire({
-                title: 'Error',
-                text: 'Hubo un problema al guardar los datos. Intenta de nuevo.',
-                icon: 'error',
-                confirmButtonText: 'Cerrar'
-            });
-        });
+    // Convertir a mayúsculas mientras el usuario escribe
+    document.getElementById('nombre').addEventListener('input', function() {
+        // Cambia el valor del input a mayúsculas
+        this.value = this.value.toUpperCase();
     });
-
-    // Función para simular el guardado de datos
-    function guardarDatos(nombre) {
-        return new Promise((resolve, reject) => {
-            // Simulación de un proceso asincrónico (por ejemplo, una llamada AJAX)
-            setTimeout(() => {
-                const exitoso = true; // Cambiar a false para simular un error
-                if (exitoso) {
-                    console.log('Datos guardados:', nombre); // Mostrar en la consola
-                    resolve(); // Datos guardados correctamente
-                } else {
-                    reject(); // Error al guardar los datos
-                }
-            }, 1000); // Tiempo simulado para el proceso de guardado
-        });
-    }
-
-    // Función para mostrar un mensaje después de cerrar el modal
-    function mostrarMensaje() {
-        $('#mensaje').removeClass('d-none'); // Muestra el mensaje
-    }
-});
 </script>
+
+
+
+
+<div class="modal fade" id="exampleModal1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Editar datos de la materia</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      <form action="materiaeditar.php" method="POST">
+    <div class="form-group">
+      <label for="nombre">Materia*</label>
+      <input type="text" id="nombre" class="form-control"placeholder="Ingrese la materia" required name="nombre_materia">
+      <small  class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
+    </div>
+ 
+    <div class="form-group">
+    </div>
+    <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
+  </form>
+  
+
+      </div>
+   
+    </div>
+  </div>
+</div>
 
     
    
