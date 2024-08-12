@@ -152,7 +152,7 @@ $service = new Google_Service_Gmail($client);
         </div>
         <!-- Campo oculto para el ID -->
         <input type="hidden" id="id_materia" name="id_materia">
-        <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
+        <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Actualizar">
     </form>
   
 
