@@ -80,8 +80,15 @@ $service = new Google_Service_Gmail($client);
             <td><?php echo $mostrar ['nombre_materia']?></td>
             <td>
             <a class="btn btn-danger" href="borrarmateria.php?id_materia=<?php echo urlencode($mostrar['id_materia']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal1">
-            <i class="fa-sharp fa-solid fa-pencil"></i></button> </td>
+            <button 
+            type="button" 
+            class="btn btn-primary btn-edit" 
+            data-toggle="modal" 
+            data-target="#exampleModal1"
+            data-id="<?php echo $mostrar['id_materia']; ?>" 
+            data-nombre="<?php echo $mostrar['nombre_materia']; ?>">
+            <i class="fa-sharp fa-solid fa-pencil"></i>
+        </button>  </td>
         </tr>
     <?php
         }
@@ -138,16 +145,15 @@ $service = new Google_Service_Gmail($client);
       </div>
       <div class="modal-body">
       <form action="materiaeditar.php" method="POST">
-    <div class="form-group">
-      <label for="nombre">Materia*</label>
-      <input type="text" id="nombre" class="form-control"placeholder="Ingrese la materia" required name="nombre_materia">
-      <small  class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
-    </div>
- 
-    <div class="form-group">
-    </div>
-    <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
-  </form>
+        <div class="form-group">
+            <label for="nombre">Materia*</label>
+            <input type="text" id="nombre" class="form-control" placeholder="Ingrese la materia" required name="nombre_materia">
+            <small class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
+        </div>
+        <!-- Campo oculto para el ID -->
+        <input type="hidden" id="id_materia" name="id_materia">
+        <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
+    </form>
   
 
       </div>
@@ -157,7 +163,24 @@ $service = new Google_Service_Gmail($client);
 </div>
 
     
-   
+<script>
+$(document).ready(function() {
+    $('.btn-edit').on('click', function() {
+        var id_materia = $(this).data('id');
+        var nombre_materia = $(this).data('nombre');
+
+        // Asigna los valores a los campos del modal
+        $('#exampleModal1 #nombre').val(nombre_materia);
+        // Puedes agregar un campo oculto para almacenar el id de la materia
+        $('<input>').attr({
+            type: 'hidden',
+            id: 'id_materia',
+            name: 'id_materia',
+            value: id_materia
+        }).appendTo('#exampleModal1 form');
+    });
+});
+</script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
