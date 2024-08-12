@@ -71,7 +71,6 @@ $service = new Google_Service_Gmail($client);
     <table class="table m-2 mt-4">
     <thead>
       <tr>
-        <th>ID</th>
         <th>Matricula</th>
         <th>Nombre(s)</th>
         <th>Apellido Paterno</th>
