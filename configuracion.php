@@ -91,13 +91,15 @@ $service = new Google_Service_Gmail($client);
          </a>
     </div>
     
+    <a href="carrera.php">
     <div class="card-container">
         <div class="card">
             <i class="fas fa-school card-icon"></i>
             <h2 class="card-title">Carrera</h2>
             <p class="card-description">Explora nuestras opciones para el hogar.</p>
         </div>
-        <a href="dashboard.php">
+    </a>
+        <a href="disponibilidada.php">
         <div class="card">
             <i class="fas fa-briefcase card-icon"></i>
             <h2 class="card-title">Disponibilidad</h2>

@@ -62,26 +62,12 @@ $service = new Google_Service_Gmail($client);
   <path d="M4 11h10" />
   <path d="M18 18m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
   <path d="M18 16.5v1.5l.5 .5" />
-</svg>Horarios escolares</h1>
+</svg>Generar Horarios</h1>
         <ul class="list-group mt-3">
         
         </ul>
     </div>
-    <a href="generar.php">
-    <div class="card-container">
-        <div class="card">
-            <i class="fas fa-plus card-icon"></i>
-            <h2 class="card-title">Generar</h2>
-            <p class="card-description">Está diseñado para optimizar el tiempo en un formato compacto.</p>
-        </div>
-    </a>
-        <a href="#">
-        <div class="card">
-            <i class="fas fa-eye card-icon"></i>
-            <h2 class="card-title">Visualizar</h2>
-            <p class="card-description">Visualiza los horarios elaborados y realiza busquedas de manera sencillagit </p>
-        </div>
-    </div>
+  
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
