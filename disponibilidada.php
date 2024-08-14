@@ -56,9 +56,7 @@ $service = new Google_Service_Gmail($client);
         </nav>
         
         <h1 class="mt-4"><i class="fa-solid fa-briefcase m-2"></i>Disponibilidad</h1>
-        <ul class="list-group mt-3">
-        
-        </ul>
+      
     </div>
    
 
