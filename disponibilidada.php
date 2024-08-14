@@ -1,4 +1,3 @@
-
 <?php
 require_once 'vendor/autoload.php';
 
@@ -56,12 +55,153 @@ $service = new Google_Service_Gmail($client);
         </nav>
         
         <h1 class="mt-4"><i class="fa-solid fa-briefcase m-2"></i>Disponibilidad</h1>
-      
+        <div class="container">
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Agregar Disponibilidad</button> 
     </div>
-   
+    </div>
+    <div class="container">
+        <table class="table m-2 mt-4">
+            <thead>
+                <tr>
+                    <th>Nombre(s) de docente</th>
+                    <th>Carrera</th>
+                    <th>Dia</th>
+                    <th>Hora</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+           
+            </tbody>
+        </table>
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Disponibilidad del docente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="guardardocente.php" method="POST">
+                        <div class="form-group">
+                            <label for="docente">Selecciona el nombre de docente*</label>
+                            <select name="id_docente" id="id_docente" class="form-control">
+                                <?php
+                                include 'db.php';
+                                $query = "SELECT * FROM docente ORDER BY id_docente";
+                                $result = mysqli_query($conexion, $query);
+                                while ($row = mysqli_fetch_array($result)) {
+                                    $id = $row['id_docente'];
+                                    $nombre = $row['nombre_d'];
+                                    $apellido = $row['apellido_p'];
+                                    $apellidom= $row['apellido_m'];
+                                    echo "<option value='$id'>$nombre $apellido $apellidom</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                        <label for="docente">Selecciona la carrera</label>
+                        <select name="id_docente" id="id_docente" class="form-control">
+                                <?php
+                                include 'db.php';
+                                $query = "SELECT * FROM carrera ORDER BY id_carrera";
+                                $result = mysqli_query($conexion, $query);
+                                while ($row = mysqli_fetch_array($result)) {
+                                    $id = $row['id_docente'];
+                                    $nombre = $row['nombre_c'];
+                                    echo "<option value='$id'>$nombre</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                        <label for="docente">Selecciona los dias</label>
+                        <div class="row">
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="lunes" id="lunes">
+                    <label class="form-check-label" for="lunes">Lunes</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="martes" id="martes">
+                    <label class="form-check-label" for="martes">Martes</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="miércoles" id="miércoles">
+                    <label class="form-check-label" for="miércoles">Miércoles</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="jueves" id="jueves">
+                    <label class="form-check-label" for="jueves">Jueves</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="viernes" id="viernes">
+                    <label class="form-check-label" for="viernes">Viernes</label>
+                </div>
+            </div>
+        </div>
+                        </div>
 
 
 
+                        
+                        <div class="form-group">
+                        <label for="docente">Selecciona las horas disponibles</label>
+                        <div class="row">
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="lunes" id="lunes">
+                    <label class="form-check-label" for="lunes">4:00 5:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="martes" id="martes">
+                    <label class="form-check-label" for="martes">5:00 6:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="miércoles" id="miércoles">
+                    <label class="form-check-label" for="miércoles">6:00 7:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="jueves" id="jueves">
+                    <label class="form-check-label" for="jueves">7:00 8:00</label>
+                </div>
+            </div>
+            <div class="col-5 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="viernes" id="viernes">
+                    <label class="form-check-label" for="viernes">8:00 9:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="viernes" id="viernes">
+                    <label class="form-check-label" for="viernes">9:00 10:00</label>
+                </div>
+            </div>
+                        </div>
+                        <input type="submit" class="btn btn-primary" value="Guardar">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 

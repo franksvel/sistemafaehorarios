@@ -65,16 +65,20 @@ $service = new Google_Service_Gmail($client);
     </div>
 
     <div class="card-container">
+        <a href="roles.php">
         <div class="card">
             <i class="fas fa-person card-icon"></i>
             <h2 class="card-title">Roles</h2>
             <p class="card-description">Explora nuestras opciones para el hogar.</p>
         </div>
+        </a>
+        <a href="usuarios.php">
         <div class="card">
             <i class="fas fa-user card-icon"></i>
             <h2 class="card-title">Usuarios</h2>
             <p class="card-description">Encuentra soluciones para tu entorno laboral.</p>
         </div>
+        </a>
         <a href="docentes.php">
         <div class="card">
             <i class="fas fa-chalkboard-user card-icon"></i>
@@ -106,16 +110,20 @@ $service = new Google_Service_Gmail($client);
             <p class="card-description">Encuentra soluciones para tu entorno laboral.</p>
         </div>
          </a>
-        <div class="card">
+         <a href="horarios.php">
+         <div class="card">
             <i class="fas fa-clock card-icon"></i>
             <h2 class="card-title">Horarios</h2>
             <p class="card-description">Mejora tu salud con nuestros consejos.</p>
         </div>
-        <div class="card">
+         </a>
+         <a href="soporte.php">
+         <div class="card">
             <i class="fas fa-headset card-icon"></i>
             <h2 class="card-title">Soporte</h2>
             <p></p>
         </div>
+         </a>
     </div>
     
 

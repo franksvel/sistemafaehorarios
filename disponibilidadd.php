@@ -65,7 +65,6 @@ $service = new Google_Service_Gmail($client);
                 <tr>
                     <th>Nombre(s) de docente</th>
                     <th>Carrera</th>
-                    <th>Materia</th>
                     <th>Dia</th>
                     <th>Hora</th>
                     <th>Acción</th>
@@ -75,14 +74,11 @@ $service = new Google_Service_Gmail($client);
            
             </tbody>
         </table>
-   
-
-
         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Agregar datos del docente</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Disponibilidad del docente</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -90,15 +86,39 @@ $service = new Google_Service_Gmail($client);
                 <div class="modal-body">
                     <form action="guardardocente.php" method="POST">
                         <div class="form-group">
-                            <label for="matricula">Selecciona el nombre de docente*</label>
-                            <input type="text" class="form-control" placeholder="Ingrese la Matricula" required name="matricula">
-                            <small class="form-text text-muted">Por favor, ingrese la matricula del docente. Toma en cuenta que se toma el valor de Y desde un inicio</small>
+                            <label for="docente">Selecciona el nombre de docente*</label>
+                            <select name="id_docente" id="id_docente" class="form-control">
+                                <?php
+                                include 'db.php';
+                                $query = "SELECT * FROM docente ORDER BY id_docente";
+                                $result = mysqli_query($conexion, $query);
+                                while ($row = mysqli_fetch_array($result)) {
+                                    $id = $row['id_docente'];
+                                    $nombre = $row['nombre_d'];
+                                    $apellido = $row['apellido_p'];
+                                    $apellidom= $row['apellido_m'];
+                                    echo "<option value='$id'>$nombre $apellido $apellidom</option>";
+                                }
+                                ?>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label for="nombre_d">Nombre(s)</label>
-                            <input type="text" class="form-control" placeholder="Ingresa los Nombre(s)" required name="nombre_d">
+                        <label for="docente">Selecciona la carrera</label>
+                        <select name="id_docente" id="id_docente" class="form-control">
+                                <?php
+                                include 'db.php';
+                                $query = "SELECT * FROM carrera ORDER BY id_carrera";
+                                $result = mysqli_query($conexion, $query);
+                                while ($row = mysqli_fetch_array($result)) {
+                                    $id = $row['id_docente'];
+                                    $nombre = $row['nombre_c'];
+                                    echo "<option value='$id'>$nombre</option>";
+                                }
+                                ?>
+                            </select>
                         </div>
                         <div class="form-group">
+                        <label for="docente">Selecciona los dias</label>
                         <div class="row">
             <div class="col-6 col-md-4 col-lg-2 mb-2">
                 <div class="form-check">
@@ -132,9 +152,49 @@ $service = new Google_Service_Gmail($client);
             </div>
         </div>
                         </div>
+
+
+
+                        
                         <div class="form-group">
-                            <label for="apellido_m">Apellido Materno</label>
-                            <input type="text" class="form-control" placeholder="Apellido Materno" required name="apellido_m">
+                        <label for="docente">Selecciona las horas disponibles</label>
+                        <div class="row">
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="lunes" id="lunes">
+                    <label class="form-check-label" for="lunes">4:00 5:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="martes" id="martes">
+                    <label class="form-check-label" for="martes">5:00 6:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="miércoles" id="miércoles">
+                    <label class="form-check-label" for="miércoles">6:00 7:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="jueves" id="jueves">
+                    <label class="form-check-label" for="jueves">7:00 8:00</label>
+                </div>
+            </div>
+            <div class="col-5 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="viernes" id="viernes">
+                    <label class="form-check-label" for="viernes">8:00 9:00</label>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="dias" value="viernes" id="viernes">
+                    <label class="form-check-label" for="viernes">9:00 10:00</label>
+                </div>
+            </div>
                         </div>
                         <input type="submit" class="btn btn-primary" value="Guardar">
                     </form>
