@@ -148,6 +148,8 @@ while ($row = mysqli_fetch_assoc($result)) {
                                         // Mostrar las horas para el día específico
                                         if (isset($dias[$dia])) {
                                             echo implode(', ', $dias[$dia]);
+                                        } else {
+                                            echo "No disponible";
                                         }
                                         ?>
                                     </td>

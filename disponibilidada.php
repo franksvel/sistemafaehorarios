@@ -19,6 +19,9 @@ $service = new Google_Service_Gmail($client);
 
 include 'db.php';
 
+// Definir el orden preferido de los días
+$orden_dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
 // Obtención de los datos
 $sql = "SELECT g.id_docente, g.id_carrera, 
                d.nombre_d, d.apellido_p, d.apellido_m, 
@@ -30,12 +33,13 @@ $sql = "SELECT g.id_docente, g.id_carrera,
         JOIN carrera c ON g.id_carrera = c.id_carrera
         JOIN dia di ON g.id_dia = di.id_dia
         JOIN disponibilidad h ON g.id_hora = h.id_hora
-        ORDER BY d.nombre_d, di.nombre_dia, h.nombre_hora";
+        ORDER BY d.nombre_d, FIELD(di.nombre_dia, '" . implode("','", $orden_dias) . "'), h.nombre_hora";
 
 $result = mysqli_query($conexion, $sql);
 
 // Agrupación de datos
 $disponibilidad = [];
+$dias_unicos = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $docente = $row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m'];
     $carrera = $row['nombre_c'];
@@ -52,7 +56,19 @@ while ($row = mysqli_fetch_assoc($result)) {
         $disponibilidad[$docente][$carrera][$dia] = [];
     }
     $disponibilidad[$docente][$carrera][$dia][] = $hora;
+
+    // Agregar días únicos a la lista
+    if (!in_array($dia, $dias_unicos)) {
+        $dias_unicos[] = $dia;
+    }
 }
+
+// Ordenar los días según el orden preferido
+usort($dias_unicos, function($a, $b) use ($orden_dias) {
+    $indexA = array_search($a, $orden_dias);
+    $indexB = array_search($b, $orden_dias);
+    return $indexA - $indexB;
+});
 ?>
 
 <!DOCTYPE html>
@@ -119,19 +135,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <tr>
                         <th>Docente</th>
                         <th>Carrera</th>
-                        <?php
-                        // Obtener todos los días únicos
-                        $dias_unicos = [];
-                        foreach ($disponibilidad as $docente => $carreras) {
-                            foreach ($carreras as $carrera => $dias) {
-                                foreach ($dias as $dia => $horas) {
-                                    if (!in_array($dia, $dias_unicos)) {
-                                        $dias_unicos[] = $dia;
-                                    }
-                                }
-                            }
-                        }
-                        foreach ($dias_unicos as $dia): ?>
+                        <?php foreach ($dias_unicos as $dia): ?>
                             <th><?php echo htmlspecialchars($dia); ?></th>
                         <?php endforeach; ?>
                     </tr>
@@ -148,6 +152,8 @@ while ($row = mysqli_fetch_assoc($result)) {
                                         // Mostrar las horas para el día específico
                                         if (isset($dias[$dia])) {
                                             echo implode(', ', $dias[$dia]);
+                                        } else {
+                                            echo "No disponible";
                                         }
                                         ?>
                                     </td>
@@ -204,7 +210,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 <label>Selecciona el día</label>
                                 <div class="d-flex flex-wrap">
                                     <?php
-                                    $query = "SELECT * FROM dia ORDER BY id_dia";
+                                    $query = "SELECT * FROM dia ORDER BY FIELD(nombre_dia, '" . implode("','", $orden_dias) . "')";
                                     $result = mysqli_query($conexion, $query);
                                     while ($row = mysqli_fetch_array($result)) {
                                         $id = $row['id_dia'];
