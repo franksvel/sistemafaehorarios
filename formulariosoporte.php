@@ -5,8 +5,8 @@ session_start();
 
 // Configura el cliente de Google
 $client = new Google_Client();
-$client->setClientId('737255136278-udfv56p46c9u8tqo6l61kt251aodu28p.apps.googleusercontent.com');
-$client->setClientSecret('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');
+$client->setClientId(getenv('GOOGLE_CLIENT_ID')); // Usar variables de entorno
+$client->setClientSecret(getenv('GOOGLE_CLIENT_SECRET')); // Usar variables de entorno
 $client->setScopes(Google_Service_Gmail::GMAIL_SEND);
 
 if (isset($_SESSION['access_token']) && $_SESSION['access_token']['expires_in'] > time()) {
@@ -42,7 +42,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $service->users_messages->send('me', $message);
         echo "El mensaje ha sido enviado exitosamente.";
     } catch (Exception $e) {
-        echo "Hubo un problema al enviar el mensaje: " . htmlspecialchars($e->getMessage());
+        error_log("Error al enviar el mensaje: " . $e->getMessage()); // Registro del error
+        echo "Hubo un problema al enviar el mensaje.";
     }
 } else {
     echo 'Método de solicitud no válido.';
