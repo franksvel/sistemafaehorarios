@@ -53,10 +53,10 @@ function existeRegistroEnMismaCarrera($conexion, $id_hora, $id_dia, $id_carrera)
 }
 
 // Función para verificar si el docente ya tiene ocupada una hora en otra carrera
-function docenteOcupadoEnOtraCarrera($conexion, $docente, $hora, $dia, $carrera) {
+function docenteOcupadoEnOtraCarrera($conexion, $id_docente, $id_hora, $id_dia, $id_carrera) {
     $query = "SELECT COUNT(*) FROM general WHERE id_docente = ? AND id_hora = ? AND id_dia = ? AND id_carrera != ?";
     $stmt = $conexion->prepare($query);
-    $stmt->bind_param('iiii', $docente, $hora, $dia, $carrera);
+    $stmt->bind_param('iiii', $id_docente, $id_hora, $id_dia, $id_carrera);
     $stmt->execute();
     $result = $stmt->get_result();
     $count = $result->fetch_array()[0];
@@ -102,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nombre_docente = getDocenteName($conexion, $id_docente);
     $errores = [];
     $registro_guardado = false;
-    
+
+    // Verificar que los días y horas existen
     foreach ($id_dias as $id_dia) {
         $mensaje_error_dia = diaExiste($conexion, $id_dia);
         if ($mensaje_error_dia) {
@@ -119,12 +120,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Verificar si ya existe un registro en la misma hora, día y carrera
             if (existeRegistroEnMismaCarrera($conexion, $id_hora, $id_dia, $id_carrera)) {
-                $errores[] = "Ya existe un registro.";
+                $errores[] = "Ya existe un registro en la carrera seleccionada para el día $id_dia a la hora $id_hora.";
                 break 2; // Salir de ambos bucles si encontramos un error
             }
 
+            // Verificar si el docente está ocupado en otra carrera
             if (docenteOcupadoEnOtraCarrera($conexion, $id_docente, $id_hora, $id_dia, $id_carrera)) {
-                $errores[] = "El docente $nombre_docente ya está ocupado el día y la hora en otra carrera.";
+                $errores[] = "El docente $nombre_docente ya está ocupado el día $id_dia a la hora $id_hora en otra carrera.";
                 break 2; // Salir de ambos bucles si encontramos un error
             }
         }
@@ -135,6 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt = $conexion->prepare($query);
         foreach ($id_dias as $id_dia) {
             foreach ($id_horas as $id_hora) {
+                // Solo insertamos si no existe el registro y el docente no está ocupado en otra carrera
                 if (!existeRegistroEnMismaCarrera($conexion, $id_hora, $id_dia, $id_carrera) && !docenteOcupadoEnOtraCarrera($conexion, $id_docente, $id_hora, $id_dia, $id_carrera)) {
                     $stmt->bind_param('iiii', $id_docente, $id_carrera, $id_dia, $id_hora);
                     if (!$stmt->execute()) {
@@ -144,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         $registro_guardado = true;
-    } elseif (empty($errores)) {
+    } else {
         $errores[] = "No se encontró ninguna combinación válida.";
     }
 
