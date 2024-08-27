@@ -1,5 +1,23 @@
 <?php
-require_once 'db.php';
+require_once 'vendor/autoload.php';
+session_start();
+
+$client = new Google_Client();
+$client->setClientId('737255136278-udfv56p46c9u8tqo6l61kt251aodu28p.apps.googleusercontent.com');
+$client->setClientSecret('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');
+$client->setRedirectUri('http://localhost/sistemafaehorarios/auth.php');
+$client->addScope(Google_Service_Gmail::GMAIL_READONLY);
+
+if (!isset($_SESSION['access_token']) || $_SESSION['access_token'] === null) {
+    header('Location: http://localhost/sistemafaehorarios/index.php');
+    exit();
+}
+
+$client->setAccessToken($_SESSION['access_token']);
+$service = new Google_Service_Gmail($client);
+
+// Incluir el archivo de conexión a la base de datos
+include 'db.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 
@@ -10,37 +28,20 @@ $id_docente_destino = $data['id_docente_destino'];
 $dia_destino = $data['dia_destino'];
 $hora_destino = $data['hora_destino'];
 
-$response = ['success' => false];
+// Actualizar la base de datos
+$query_origen = "UPDATE disponibilidad_docente SET id_docente = NULL WHERE id_docente = ? AND id_dia = ? AND id_hora = ?";
+$stmt_origen = $conexion->prepare($query_origen);
+$stmt_origen->bind_param("iii", $id_docente_origen, $dia_origen, $hora_origen);
+$stmt_origen->execute();
 
-$conexion->begin_transaction();
+$query_destino = "UPDATE disponibilidad_docente SET id_docente = ? WHERE id_dia = ? AND id_hora = ?";
+$stmt_destino = $conexion->prepare($query_destino);
+$stmt_destino->bind_param("iii", $id_docente_destino, $dia_destino, $hora_destino);
+$stmt_destino->execute();
 
-try {
-    // Intercambiar las asignaciones entre las celdas
-
-    // Cambiar la asignación de origen al destino
-    if ($id_docente_destino !== "") {
-        $query = "INSERT INTO materia_docente (id_docente, id_dia, id_hora) VALUES (?, ?, ?)
-                  ON DUPLICATE KEY UPDATE id_docente = VALUES(id_docente)";
-        $stmt = $conexion->prepare($query);
-        $stmt->bind_param("iii", $id_docente_destino, $dia_destino, $hora_destino);
-        $stmt->execute();
-    }
-
-    // Cambiar la asignación del destino al origen
-    if ($id_docente_origen !== "") {
-        $query = "INSERT INTO materia_docente (id_docente, id_dia, id_hora) VALUES (?, ?, ?)
-                  ON DUPLICATE KEY UPDATE id_docente = VALUES(id_docente)";
-        $stmt = $conexion->prepare($query);
-        $stmt->bind_param("iii", $id_docente_origen, $dia_origen, $hora_origen);
-        $stmt->execute();
-    }
-
-    $conexion->commit();
-    $response['success'] = true;
-} catch (Exception $e) {
-    $conexion->rollback();
-    $response['error'] = $e->getMessage();
+if ($stmt_origen->affected_rows >= 0 && $stmt_destino->affected_rows >= 0) {
+    echo json_encode(['success' => true]);
+} else {
+    echo json_encode(['success' => false]);
 }
-
-echo json_encode($response);
 ?>

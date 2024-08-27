@@ -16,8 +16,6 @@ if (!isset($_SESSION['access_token']) || $_SESSION['access_token'] === null) {
 
 $client->setAccessToken($_SESSION['access_token']);
 $service = new Google_Service_Gmail($client);
-
-
 ?>
 
 <!DOCTYPE html>
@@ -35,11 +33,11 @@ $service = new Google_Service_Gmail($client);
 </head>
 <body>
     <div class="container mt-5">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="dashboard.php">Dashboard</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-    </button>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="dashboard.php">Dashboard</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
@@ -56,131 +54,126 @@ $service = new Google_Service_Gmail($client);
                 </ul>
             </div>
         </nav>
-        
 
-     <h1 class="mt-4 d-flex"><i class="fa-solid fa-book m-2"></i>Materia</h1>
+        <h1 class="mt-4 d-flex"><i class="fa-solid fa-book m-2"></i>Materia</h1>
     </div>
     <div class="container">
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Agregar Materia</button> 
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Agregar Materia</button> 
     </div>
-
 
     <div class="container">
-    <table class="table m-2 mt-4">
-    <thead><tr><th>Nombre(s)</th><th>Accion</th></tr></thead>
-    <tbody>
-    <?php
-        include 'db.php';
-        $sql="SELECT * FROM materia ";
-        $result=mysqli_query($conexion,$sql);
-        while($mostrar=mysqli_fetch_array($result)){
-
-    ?>
-        <tr>
-            <td><?php echo $mostrar ['nombre_materia']?></td>
-            <td>
-            <a class="btn btn-danger" href="borrarmateria.php?id_materia=<?php echo urlencode($mostrar['id_materia']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
-            <button 
-            type="button" 
-            class="btn btn-primary btn-edit" 
-            data-toggle="modal" 
-            data-target="#exampleModal1"
-            data-id="<?php echo $mostrar['id_materia']; ?>" 
-            data-nombre="<?php echo $mostrar['nombre_materia']; ?>">
-            <i class="fa-sharp fa-solid fa-pencil"></i>
-        </button>  </td>
-        </tr>
-    <?php
-        }
-    ?>
-    </tbody>
-    </table>
+        <table class="table m-2 mt-4">
+            <thead>
+                <tr>
+                    <th>Nombre(s)</th>
+                    <th>Color</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                include 'db.php';
+                $sql = "SELECT * FROM materia";
+                $result = mysqli_query($conexion, $sql);
+                while ($mostrar = mysqli_fetch_array($result)) {
+                ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($mostrar['nombre_materia']); ?></td>
+                        <td>
+                            <div style="width: 30px; height: 30px; background-color: <?php echo htmlspecialchars($mostrar['color']); ?>;"></div>
+                        </td>
+                        <td>
+                            <a class="btn btn-danger" href="borrarmateria.php?id_materia=<?php echo urlencode($mostrar['id_materia']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
+                            <button 
+                                type="button" 
+                                class="btn btn-primary btn-edit" 
+                                data-toggle="modal" 
+                                data-target="#exampleModal1"
+                                data-id="<?php echo htmlspecialchars($mostrar['id_materia']); ?>" 
+                                data-nombre="<?php echo htmlspecialchars($mostrar['nombre_materia']); ?>">
+                                <i class="fa-sharp fa-solid fa-pencil"></i>
+                            </button>
+                        </td>
+                    </tr>
+                <?php
+                }
+                ?>
+            </tbody>
+        </table>
     </div>
 
-
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Agregar datos de la materia</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-      <form action="guardarregistro.php" method="POST">
-    <div class="form-group">
-      <label for="nombre">Materia*</label>
-      <input type="text" id="nombre" class="form-control"placeholder="Ingrese la materia" required name="nombre_materia">
-      <small  class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
+    <!-- Modal para agregar materia -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Agregar datos de la materia</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="guardarregistro.php" method="POST">
+                        <div class="form-group">
+                            <label for="nombre">Materia*</label>
+                            <input type="text" id="nombre" class="form-control" placeholder="Ingrese la materia" required name="nombre_materia">
+                            <small class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
+                        </div>
+                        <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Guardar">
-  </form>
-  
-
-      </div>
-   
-    </div>
-  </div>
-</div>
-<script>
+    <script>
     // Convertir a mayúsculas mientras el usuario escribe
     document.getElementById('nombre').addEventListener('input', function() {
         // Cambia el valor del input a mayúsculas
         this.value = this.value.toUpperCase();
     });
 </script>
-
-
-
-
-<div class="modal fade" id="exampleModal1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Editar datos de la materia</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-      <form action="materiaeditar.php" method="POST">
-        <div class="form-group">
-            <label for="nombre">Materia*</label>
-            <input type="text" id="nombre" class="form-control" placeholder="Ingrese la materia" required name="nombre_materia">
-            <small class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
+    <!-- Modal para editar materia -->
+    <div class="modal fade" id="exampleModal1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Editar datos de la materia</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="materiaeditar.php" method="POST">
+                        <div class="form-group">
+                            <label for="nombre">Materia*</label>
+                            <input type="text" id="nombre" class="form-control" placeholder="Ingrese la materia" required name="nombre_materia">
+                            <small class="form-text text-muted">Por favor, ingrese el nombre de la materia.</small>
+                        </div>
+                        <input type="hidden" id="id_materia" name="id_materia">
+                        <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Actualizar">
+                    </form>
+                </div>
+            </div>
         </div>
-        <!-- Campo oculto para el ID -->
-        <input type="hidden" id="id_materia" name="id_materia">
-        <input type="submit" id="mostrarAlerta" name="formulario" class="btn btn-primary" value="Actualizar">
-    </form>
-  
-
-      </div>
-   
     </div>
-  </div>
-</div>
 
-    
-<script>
-$(document).ready(function() {
-    $('.btn-edit').on('click', function() {
-        var id_materia = $(this).data('id');
-        var nombre_materia = $(this).data('nombre');
+    <script>
+    $(document).ready(function() {
+        $('.btn-edit').on('click', function() {
+            var id_materia = $(this).data('id');
+            var nombre_materia = $(this).data('nombre');
 
-        // Asigna los valores a los campos del modal
-        $('#exampleModal1 #nombre').val(nombre_materia);
-        // Puedes agregar un campo oculto para almacenar el id de la materia
-        $('<input>').attr({
-            type: 'hidden',
-            id: 'id_materia',
-            name: 'id_materia',
-            value: id_materia
-        }).appendTo('#exampleModal1 form');
+            $('#exampleModal1 #nombre').val(nombre_materia);
+            $('<input>').attr({
+                type: 'hidden',
+                id: 'id_materia',
+                name: 'id_materia',
+                value: id_materia
+            }).appendTo('#exampleModal1 form');
+        });
     });
-});
-</script>
+    </script>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

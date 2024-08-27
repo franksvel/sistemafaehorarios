@@ -39,76 +39,86 @@ function obtenerHorasDisponibles($conexion) {
     }
     return $horas;
 }
-
 function obtenerDisponibilidad($conexion) {
-    // Obtener todos los docentes
-    $docentesQuery = "SELECT id_docente, nombre_d, apellido_p, apellido_m FROM docente";
-    $docentesResult = $conexion->query($docentesQuery);
-    $docentes = [];
-    while ($row = $docentesResult->fetch_assoc()) {
-        $docentes[] = $row;
-    }
-
-    // Obtener días y horas
-    $diasQuery = "SELECT id_dia FROM dia";
-    $diasResult = $conexion->query($diasQuery);
-    $dias = [];
-    while ($row = $diasResult->fetch_assoc()) {
-        $dias[] = $row['id_dia'];
-    }
-
-    $horasQuery = "SELECT id_hora FROM disponibilidad";
-    $horasResult = $conexion->query($horasQuery);
-    $horas = [];
-    while ($row = $horasResult->fetch_assoc()) {
-        $horas[] = $row['id_hora'];
-    }
-
-    // Crear una tabla temporal para asignar docentes aleatoriamente
-    $conexion->query("CREATE TEMPORARY TABLE temp_disponibilidad (
-        id_dia INT,
-        id_hora INT,
-        id_docente INT,
-        color VARCHAR(7)
-    )");
-
-    // Insertar las combinaciones de días y horas con docentes aleatorios en la tabla temporal
-    foreach ($dias as $id_dia) {
-        foreach ($horas as $id_hora) {
-            $docente = $docentes[array_rand($docentes)]; // Selecciona un docente aleatorio
-            $color = sprintf('#%06X', mt_rand(0, 0xFFFFFF)); // Color aleatorio
-            $conexion->query("INSERT INTO temp_disponibilidad (id_dia, id_hora, id_docente, color) VALUES ($id_dia, $id_hora, {$docente['id_docente']}, '$color')");
+    $disponibilidad = [];
+    // Asegúrate de que los nombres de las columnas sean correctos
+    $consulta = "SELECT d.id_docente, d.dia, d.hora, d.color, p.nombre_d AS nombre
+                 FROM disponibilidad_docente d
+                 INNER JOIN docente p ON d.id_docente = p.id_docente";
+    $resultado = $conexion->query($consulta);
+    if ($resultado && $resultado->num_rows > 0) {
+        while ($fila = $resultado->fetch_assoc()) {
+            $dia = $fila['dia'];
+            $hora = $fila['hora'];
+            if (!isset($disponibilidad[$dia])) {
+                $disponibilidad[$dia] = [];
+            }
+            $disponibilidad[$dia][$hora] = [
+                'id_docente' => $fila['id_docente'],
+                'nombre' => $fila['nombre'],
+                'color' => $fila['color']
+            ];
         }
     }
-
-    // Obtener los datos desde la tabla temporal
-    $query = "SELECT d.id_dia, d.id_hora, doc.id_docente, doc.nombre_d, doc.apellido_p, doc.apellido_m, d.color
-              FROM temp_disponibilidad d
-              JOIN docente doc ON d.id_docente = doc.id_docente
-              ORDER BY d.id_dia, d.id_hora"; // La consulta ya está aleatorizada por el proceso de inserción
-    $result = $conexion->query($query);
-
-    $disponibilidad = [];
-    while ($row = $result->fetch_assoc()) {
-        $disponibilidad[$row['id_dia']][$row['id_hora']] = [
-            'nombre' => $row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m'],
-            'id_docente' => $row['id_docente'],
-            'color' => $row['color']
-        ];
-    }
-
-    // Eliminar la tabla temporal
-    $conexion->query("DROP TEMPORARY TABLE temp_disponibilidad");
-
     return $disponibilidad;
 }
+
+
 
 // Obtener los días, horas y disponibilidad
 $dias = obtenerDiasDeLaSemana($conexion);
 $horas = obtenerHorasDisponibles($conexion);
 $disponibilidad = obtenerDisponibilidad($conexion);
-?>
 
+// Función para asignar materias aleatoriamente a los espacios seleccionados
+function asignarMateriasAleatoriamente($conexion, $horas_seleccionadas, $dias_seleccionados) {
+    // Obtener las materias disponibles
+    $materias_query = "SELECT id_materia, nombre_materia FROM materia";
+    $materias_result = $conexion->query($materias_query);
+    $materias = [];
+    while ($row = $materias_result->fetch_assoc()) {
+        $materias[] = $row;
+    }
+
+    // Asignar materias aleatoriamente a los espacios seleccionados
+    foreach ($dias_seleccionados as $dia) {
+        foreach ($horas_seleccionadas as $hora) {
+            $materia = $materias[array_rand($materias)];
+            $id_materia = $materia['id_materia'];
+            $insert_query = "INSERT INTO espacios (hora, dia, id_materia) VALUES (?, ?, ?)
+                             ON DUPLICATE KEY UPDATE id_materia = VALUES(id_materia)";
+            $stmt = $conexion->prepare($insert_query);
+            $stmt->bind_param('sss', $hora, $dia, $id_materia);
+            $stmt->execute();
+        }
+    }
+}
+
+function asignarMateria($conexion, $id_docente, $id_materia, $id_dia, $id_hora, $color) {
+    // Verificar si ya existe una asignación en esa hora y día usando INNER JOIN
+    $consulta = "
+        SELECT g.id_docente, a.id_materia, a.dia, a.hora
+        FROM general g
+        INNER JOIN asignacion a ON g.id_docente = a.id_docente
+        WHERE a.id_docente = ? AND a.dia = ? AND a.hora = ?";
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param('sss', $id_docente, $id_dia, $id_hora);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+
+    if ($resultado->num_rows > 0) {
+        // Actualizar la asignación existente
+        $consulta = "UPDATE asignacion SET id_materia = ?, color = ? WHERE id_docente = ? AND dia = ? AND hora = ?";
+    } else {
+        // Insertar una nueva asignación
+        $consulta = "INSERT INTO asignacion (id_docente, id_materia, dia, hora, color) VALUES (?, ?, ?, ?, ?)";
+    }
+
+    $stmt = $conexion->prepare($consulta);
+    $stmt->bind_param('sssss', $id_materia, $color, $id_docente, $id_dia, $id_hora);
+    $stmt->execute();
+}
+?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -224,14 +234,14 @@ $disponibilidad = obtenerDisponibilidad($conexion);
                             <td 
                                 data-toggle="modal" 
                                 data-target="#addSubjectModal" 
-                                data-id_docente="<?php echo $disponibilidad[$id_dia][$id_hora]['id_docente'] ?? ''; ?>"
-                                data-dia="<?php echo $id_dia; ?>"
-                                data-hora="<?php echo $id_hora; ?>"
-                                class="draggable"
+                                data-id_docente="<?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora]['id_docente'] ?? ''); ?>"
+                                data-dia="<?php echo htmlspecialchars($id_dia); ?>"
+                                data-hora="<?php echo htmlspecialchars($id_hora); ?>"
+                                class="draggable docente-cell"
                                 draggable="true"
-                                style="background-color: <?php echo $disponibilidad[$id_dia][$id_hora]['color']; ?>;"
+                                style="background-color: <?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora]['color'] ?? '#FFFFFF'); ?>;"
                             >
-                                <?php echo isset($disponibilidad[$id_dia][$id_hora]) ? htmlspecialchars($disponibilidad[$id_dia][$id_hora]['nombre']) : 'No asignado'; ?>
+                                <?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora]['nombre'] ?? 'No asignado'); ?>
                             </td>
                         <?php endforeach; ?>
                     </tr>
@@ -257,9 +267,9 @@ $disponibilidad = obtenerDisponibilidad($conexion);
                                 <label for="id_materia">Selecciona la materia*</label>
                                 <select name="id_materia" id="id_materia" class="form-control" required>
                                     <?php
-                                    $query = "SELECT * FROM materia ORDER BY id_materia";
-                                    $result = mysqli_query($conexion, $query);
-                                    while ($row = mysqli_fetch_array($result)) {
+                                    $query = "SELECT id_materia, nombre_materia FROM materia ORDER BY id_materia";
+                                    $result = $conexion->query($query);
+                                    while ($row = $result->fetch_assoc()) {
                                         $id = $row['id_materia'];
                                         $nombre = $row['nombre_materia'];
                                         echo "<option value='$id'>$nombre</option>";
@@ -306,7 +316,6 @@ $disponibilidad = obtenerDisponibilidad($conexion);
             element.addEventListener('drop', (e) => {
                 e.preventDefault();
                 if (draggedElement && draggedElement !== e.target) {
-                    // Intercambiar contenido entre celdas
                     const draggedContent = draggedElement.innerHTML;
                     const targetContent = e.target.innerHTML;
                     const draggedData = draggedElement.dataset;
@@ -337,16 +346,13 @@ $disponibilidad = obtenerDisponibilidad($conexion);
                 }),
             })
             .then(response => response.json())
-      0      .then(data => {
+            .then(data => {
                 if (data.success) {
-                    // Opcional: Mostrar un mensaje de éxito
                     console.log('Asignación actualizada exitosamente.');
                 } else {
                     alert('Error al actualizar la asignación.');
-                    // Revertir el cambio si hay error
-                 // Opcional, recargar la página para revertir cambios
                 }
-            })
+            });
         }
     });
     </script>

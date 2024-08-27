@@ -113,7 +113,7 @@ $service = new Google_Service_Gmail($client);
          <a href="horarios.php">
          <div class="card">
             <i class="fas fa-clock card-icon"></i>
-            <h2 class="card-title">Horarios</h2>
+            <h2 class="card-title">Asignar</h2>
             <p class="card-description">Mejora tu salud con nuestros consejos.</p>
         </div>
          </a>

@@ -15,54 +15,6 @@ function getDocenteName($conexion, $id_docente) {
     return "El docente con ID $id_docente no existe.";
 }
 
-// Función para obtener el nombre del día
-function getDiaName($conexion, $id_dia) {
-    $query = "SELECT nombre_dia FROM dia WHERE id_dia = ?";
-    $stmt = $conexion->prepare($query);
-    $stmt->bind_param('i', $id_dia);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        return $row['nombre_dia'];
-    }
-    return "El día con ID $id_dia no existe.";
-}
-
-// Función para obtener el nombre de la hora
-function getHoraInicio($conexion, $id_hora) {
-    $query = "SELECT nombre_hora FROM disponibilidad WHERE id_hora = ?";
-    $stmt = $conexion->prepare($query);
-    $stmt->bind_param('i', $id_hora);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        return $row['nombre_hora'];
-    }
-    return "La hora con ID $id_hora no existe.";
-}
-
-// Función para verificar si ya existe un registro con la misma hora y día en la misma carrera
-function existeRegistroEnMismaCarrera($conexion, $id_hora, $id_dia, $id_carrera) {
-    $query = "SELECT COUNT(*) FROM general WHERE id_hora = ? AND id_dia = ? AND id_carrera = ?";
-    $stmt = $conexion->prepare($query);
-    $stmt->bind_param('iii', $id_hora, $id_dia, $id_carrera);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $count = $result->fetch_array()[0];
-    return $count > 0;
-}
-
-// Función para verificar si el docente ya tiene ocupada una hora en otra carrera
-function docenteOcupadoEnOtraCarrera($conexion, $id_docente, $id_hora, $id_dia, $id_carrera) {
-    $query = "SELECT COUNT(*) FROM general WHERE id_docente = ? AND id_hora = ? AND id_dia = ? AND id_carrera != ?";
-    $stmt = $conexion->prepare($query);
-    $stmt->bind_param('iiii', $id_docente, $id_hora, $id_dia, $id_carrera);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $count = $result->fetch_array()[0];
-    return $count > 0;
-}
-
 // Función para verificar si un día existe
 function diaExiste($conexion, $id_dia) {
     $query = "SELECT COUNT(*) FROM dia WHERE id_dia = ?";
@@ -71,10 +23,7 @@ function diaExiste($conexion, $id_dia) {
     $stmt->execute();
     $result = $stmt->get_result();
     $count = $result->fetch_array()[0];
-    if ($count == 0) {
-        return "El día con ID $id_dia no existe.";
-    }
-    return null;
+    return $count > 0;
 }
 
 // Función para verificar si una hora existe
@@ -85,10 +34,7 @@ function horaExiste($conexion, $id_hora) {
     $stmt->execute();
     $result = $stmt->get_result();
     $count = $result->fetch_array()[0];
-    if ($count == 0) {
-        return "La hora con ID $id_hora no existe.";
-    }
-    return null;
+    return $count > 0;
 }
 
 // Procesar el formulario
@@ -97,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_carrera = $_POST['id_carrera'];
     $id_dias = $_POST['id_dia'];
     $id_horas = $_POST['id_hora'];
+    $semestre = $_POST['id_semestre'];  // Recibiendo el semestre desde el formulario
 
     // Obtener nombre del docente
     $nombre_docente = getDocenteName($conexion, $id_docente);
@@ -105,50 +52,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Verificar que los días y horas existen
     foreach ($id_dias as $id_dia) {
-        $mensaje_error_dia = diaExiste($conexion, $id_dia);
-        if ($mensaje_error_dia) {
-            $errores[] = $mensaje_error_dia;
+        if (!diaExiste($conexion, $id_dia)) {
+            $errores[] = "El día con ID $id_dia no existe.";
             continue;
         }
 
         foreach ($id_horas as $id_hora) {
-            $mensaje_error_hora = horaExiste($conexion, $id_hora);
-            if ($mensaje_error_hora) {
-                $errores[] = $mensaje_error_hora;
+            if (!horaExiste($conexion, $id_hora)) {
+                $errores[] = "La hora con ID $id_hora no existe.";
                 continue;
             }
 
-            // Verificar si ya existe un registro en la misma hora, día y carrera
-            if (existeRegistroEnMismaCarrera($conexion, $id_hora, $id_dia, $id_carrera)) {
-                $errores[] = "Ya existe un registro en la carrera seleccionada para el día $id_dia a la hora $id_hora.";
-                break 2; // Salir de ambos bucles si encontramos un error
-            }
+            // Insertar directamente sin verificar condiciones previas
+            $query = "INSERT INTO general (id_docente, id_carrera, id_dia, id_hora, id_semestre) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $conexion->prepare($query);
+            $stmt->bind_param('iiiii', $id_docente, $id_carrera, $id_dia, $id_hora, $semestre);
 
-            // Verificar si el docente está ocupado en otra carrera
-            if (docenteOcupadoEnOtraCarrera($conexion, $id_docente, $id_hora, $id_dia, $id_carrera)) {
-                $errores[] = "El docente $nombre_docente ya está ocupado el día $id_dia a la hora $id_hora en otra carrera.";
-                break 2; // Salir de ambos bucles si encontramos un error
+            if (!$stmt->execute()) {
+                $errores[] = "Error al guardar los datos para el día $id_dia a la hora $id_hora: " . $stmt->error;
+            } else {
+                $registro_guardado = true;
             }
         }
-    }
-
-    if (empty($errores)) {
-        $query = "INSERT INTO general (id_docente, id_carrera, id_dia, id_hora) VALUES (?, ?, ?, ?)";
-        $stmt = $conexion->prepare($query);
-        foreach ($id_dias as $id_dia) {
-            foreach ($id_horas as $id_hora) {
-                // Solo insertamos si no existe el registro y el docente no está ocupado en otra carrera
-                if (!existeRegistroEnMismaCarrera($conexion, $id_hora, $id_dia, $id_carrera) && !docenteOcupadoEnOtraCarrera($conexion, $id_docente, $id_hora, $id_dia, $id_carrera)) {
-                    $stmt->bind_param('iiii', $id_docente, $id_carrera, $id_dia, $id_hora);
-                    if (!$stmt->execute()) {
-                        $errores[] = "Error al guardar los datos para el día $id_dia a la hora $id_hora: " . $stmt->error;
-                    }
-                }
-            }
-        }
-        $registro_guardado = true;
-    } else {
-        $errores[] = "No se encontró ninguna combinación válida.";
     }
 
     // Mostrar alerta con SweetAlert2
@@ -164,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
               if (errors.length > 0) {
                 Swal.fire({
                   title: "¡Error!",
-                  text: errors[0],
+                  text: errors.join("\\n"),
                   icon: "error",
                   confirmButtonText: "Aceptar"
                 }).then((result) => {

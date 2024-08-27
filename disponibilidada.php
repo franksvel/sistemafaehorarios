@@ -19,32 +19,31 @@ $service = new Google_Service_Gmail($client);
 
 include 'db.php';
 
-// Definir el orden preferido de los días
-$orden_dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-
 // Obtención de los datos
 $sql = "SELECT g.id_docente, g.id_carrera, 
                d.nombre_d, d.apellido_p, d.apellido_m, 
                c.nombre_c, 
                di.nombre_dia, 
-               h.nombre_hora
+               h.nombre_hora,
+               s.nombre AS semestre_nombre
         FROM general g
         JOIN docente d ON g.id_docente = d.id_docente
         JOIN carrera c ON g.id_carrera = c.id_carrera
         JOIN dia di ON g.id_dia = di.id_dia
         JOIN disponibilidad h ON g.id_hora = h.id_hora
-        ORDER BY d.nombre_d, FIELD(di.nombre_dia, '" . implode("','", $orden_dias) . "'), h.nombre_hora";
+        JOIN semestre s ON g.id_semestre = s.id_semestre
+        ORDER BY d.nombre_d, di.nombre_dia, h.nombre_hora";
 
 $result = mysqli_query($conexion, $sql);
 
 // Agrupación de datos
 $disponibilidad = [];
-$dias_unicos = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $docente = $row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m'];
     $carrera = $row['nombre_c'];
     $dia = $row['nombre_dia'];
     $hora = $row['nombre_hora'];
+    $semestre = $row['semestre_nombre'];
 
     if (!isset($disponibilidad[$docente])) {
         $disponibilidad[$docente] = [];
@@ -52,23 +51,14 @@ while ($row = mysqli_fetch_assoc($result)) {
     if (!isset($disponibilidad[$docente][$carrera])) {
         $disponibilidad[$docente][$carrera] = [];
     }
-    if (!isset($disponibilidad[$docente][$carrera][$dia])) {
-        $disponibilidad[$docente][$carrera][$dia] = [];
+    if (!isset($disponibilidad[$docente][$carrera][$semestre])) {
+        $disponibilidad[$docente][$carrera][$semestre] = [];
     }
-    $disponibilidad[$docente][$carrera][$dia][] = $hora;
-
-    // Agregar días únicos a la lista
-    if (!in_array($dia, $dias_unicos)) {
-        $dias_unicos[] = $dia;
+    if (!isset($disponibilidad[$docente][$carrera][$semestre][$dia])) {
+        $disponibilidad[$docente][$carrera][$semestre][$dia] = [];
     }
+    $disponibilidad[$docente][$carrera][$semestre][$dia][] = $hora;
 }
-
-// Ordenar los días según el orden preferido
-usort($dias_unicos, function($a, $b) use ($orden_dias) {
-    $indexA = array_search($a, $orden_dias);
-    $indexB = array_search($b, $orden_dias);
-    return $indexA - $indexB;
-});
 ?>
 
 <!DOCTYPE html>
@@ -128,39 +118,58 @@ usort($dias_unicos, function($a, $b) use ($orden_dias) {
         <div class="container">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Agregar Disponibilidad</button> 
         </div>
-        
+      
         <div class="container mt-4">
             <table class="calendar-table">
                 <thead>
                     <tr>
                         <th>Docente</th>
                         <th>Carrera</th>
-                        <?php foreach ($dias_unicos as $dia): ?>
+                        <th>Semestre</th>
+
+                        <?php
+                        // Obtener todos los días únicos
+                        $dias_unicos = [];
+                        foreach ($disponibilidad as $docente => $carreras) {
+                            foreach ($carreras as $carrera => $semestres) {
+                                foreach ($semestres as $semestre => $dias) {
+                                    foreach ($dias as $dia => $horas) {
+                                        if (!in_array($dia, $dias_unicos)) {
+                                            $dias_unicos[] = $dia;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        foreach ($dias_unicos as $dia): ?>
                             <th><?php echo htmlspecialchars($dia); ?></th>
                         <?php endforeach; ?>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($disponibilidad as $docente => $carreras): ?>
-                        <?php foreach ($carreras as $carrera => $dias): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($docente); ?></td>
-                                <td><?php echo htmlspecialchars($carrera); ?></td>
-                                <?php foreach ($dias_unicos as $dia): ?>
-                                    <td>
-                                        <?php
-                                        // Mostrar las horas para el día específico
-                                        if (isset($dias[$dia])) {
-                                            echo implode(', ', $dias[$dia]);
-                                        } else {
-                                            echo "No disponible";
-                                        }
-                                        ?>
-                                    </td>
-                                <?php endforeach; ?>
-                            </tr>
+                        <?php foreach ($carreras as $carrera => $semestres): ?>
+                            <?php foreach ($semestres as $semestre => $dias): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($docente); ?></td>
+                                    <td><?php echo htmlspecialchars($carrera); ?></td>
+                                    <td><?php echo htmlspecialchars($semestre); ?></td>
+                                    <?php foreach ($dias_unicos as $dia): ?>
+                                        <td>
+                                            <?php
+                                            // Mostrar las horas para el día específico
+                                            if (isset($dias[$dia])) {
+                                                echo implode(', ', $dias[$dia]);
+                                            } else {
+                                                echo "No disponible";
+                                            }
+                                            ?>
+                                        </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endforeach; ?>
                         <?php endforeach; ?>
-                    <?php endforeach; ?>
+                    <?php endforeach; ?>                    
                 </tbody>
             </table>
         </div>
@@ -210,7 +219,7 @@ usort($dias_unicos, function($a, $b) use ($orden_dias) {
                                 <label>Selecciona el día</label>
                                 <div class="d-flex flex-wrap">
                                     <?php
-                                    $query = "SELECT * FROM dia ORDER BY FIELD(nombre_dia, '" . implode("','", $orden_dias) . "')";
+                                    $query = "SELECT * FROM dia ORDER BY id_dia";
                                     $result = mysqli_query($conexion, $query);
                                     while ($row = mysqli_fetch_array($result)) {
                                         $id = $row['id_dia'];
@@ -243,6 +252,20 @@ usort($dias_unicos, function($a, $b) use ($orden_dias) {
                                     }
                                     ?>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_semestre">Selecciona el semestre</label>
+                                <select name="id_semestre" id="id_semestre" class="form-control" required>
+                                    <?php
+                                    $query = "SELECT * FROM semestre ORDER BY id_semestre";
+                                    $result = mysqli_query($conexion, $query);
+                                    while ($row = mysqli_fetch_array($result)) {
+                                        $id = $row['id_semestre'];
+                                        $nombre = $row['nombre'];
+                                        echo "<option value='$id'>$nombre</option>";
+                                    }
+                                    ?>
+                                </select>
                             </div>
                             <input type="submit" class="btn btn-primary" value="Guardar">
                         </form>
