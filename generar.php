@@ -300,6 +300,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                 </div>
             </div>
             <button type="submit" class="btn btn-primary mt-3">Aplicar Filtros</button>
+            <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Refrescar Tabla</button>
         </form>
 
         <table class="calendar-table">
@@ -385,5 +386,9 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
             }
         });
     </script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
