@@ -19,7 +19,47 @@ $service = new Google_Service_Gmail($client);
 // Incluir el archivo de conexión a la base de datos
 include 'db.php';
 
-// Funciones para obtener los días de la semana, las horas disponibles y la disponibilidad de los docentes
+// Funciones para obtener los datos necesarios para los filtros
+function obtenerMaterias($conexion) {
+    $query = "SELECT id_materia, nombre_materia FROM materia ORDER BY nombre_materia";
+    $result = $conexion->query($query);
+    $materias = [];
+    while ($row = $result->fetch_assoc()) {
+        $materias[] = $row;
+    }
+    return $materias;
+}
+
+function obtenerDocentes($conexion) {
+    $query = "SELECT id_docente, nombre_d FROM docente ORDER BY nombre_d";
+    $result = $conexion->query($query);
+    $docentes = [];
+    while ($row = $result->fetch_assoc()) {
+        $docentes[] = $row;
+    }
+    return $docentes;
+}
+
+function obtenerCarreras($conexion) {
+    $query = "SELECT id_carrera, nombre_c FROM carrera ORDER BY nombre_c";
+    $result = $conexion->query($query);
+    $carreras = [];
+    while ($row = $result->fetch_assoc()) {
+        $carreras[] = $row;
+    }
+    return $carreras;
+}
+
+function obtenerSemestres($conexion) {
+    $query = "SELECT DISTINCT id_semestre FROM general ORDER BY id_semestre";
+    $result = $conexion->query($query);
+    $semestres = [];
+    while ($row = $result->fetch_assoc()) {
+        $semestres[] = $row['id_semestre'];
+    }
+    return $semestres;
+}
+
 function obtenerDiasDeLaSemana($conexion) {
     $query = "SELECT id_dia, nombre_dia FROM dia ORDER BY id_dia";
     $result = $conexion->query($query);
@@ -39,14 +79,35 @@ function obtenerHorasDisponibles($conexion) {
     }
     return $horas;
 }
-function obtenerDisponibilidad($conexion) {
+
+function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente = null, $filtroCarrera = null, $filtroSemestre = null) {
     $disponibilidad = [];
 
-    // Consulta SQL para obtener la disponibilidad combinada de las tablas general, docente, asignacion y materia
-    $consulta = "SELECT d.id_docente, d.id_dia, d.id_hora, m.nombre_materia, m.color
+    $conditions = [];
+    if ($filtroMateria) {
+        $conditions[] = "m.id_materia = " . intval($filtroMateria);
+    }
+    if ($filtroDocente) {
+        $conditions[] = "d.id_docente = " . intval($filtroDocente);
+    }
+    if ($filtroCarrera) {
+        $conditions[] = "a.id_carrera = " . intval($filtroCarrera);
+    }
+    if ($filtroSemestre) {
+        $conditions[] = "d.semestre = " . intval($filtroSemestre);
+    }
+
+    $conditionString = implode(" AND ", $conditions);
+    if ($conditionString) {
+        $conditionString = "WHERE " . $conditionString;
+    }
+
+    // Obtener la disponibilidad y asignación del docente con las materias que puede impartir
+    $consulta = "SELECT d.id_docente, d.id_dia, d.id_hora, m.id_materia, m.nombre_materia, m.color
                  FROM general d
                  INNER JOIN asignacion a ON d.id_docente = a.id_docente
-                 INNER JOIN materia m ON a.id_materia = m.id_materia";
+                 INNER JOIN materia m ON a.id_materia = m.id_materia
+                 $conditionString";
 
     $resultado = $conexion->query($consulta);
 
@@ -54,29 +115,49 @@ function obtenerDisponibilidad($conexion) {
         while ($fila = $resultado->fetch_assoc()) {
             $dia = $fila['id_dia'];
             $hora = $fila['id_hora'];
+
             if (!isset($disponibilidad[$dia])) {
                 $disponibilidad[$dia] = [];
             }
             if (!isset($disponibilidad[$dia][$hora])) {
                 $disponibilidad[$dia][$hora] = [];
             }
-            // Añadir la disponibilidad a la hora correspondiente, incluyendo la materia asignada
+
+            // Asignar aleatoriamente una de las materias que el docente tiene disponibles para esa hora y día
             $disponibilidad[$dia][$hora][] = [
                 'id_docente' => $fila['id_docente'],
                 'nombre_materia' => $fila['nombre_materia'],
                 'color' => $fila['color']
             ];
         }
+
+        // Hacer la asignación aleatoria
+        foreach ($disponibilidad as $dia => &$horas) {
+            foreach ($horas as $hora => &$docenteMaterias) {
+                // Selecciona una materia aleatoria de las asignadas al docente para esa hora
+                $materiaAleatoria = $docenteMaterias[array_rand($docenteMaterias)];
+                $docenteMaterias = [$materiaAleatoria];  // Sobrescribe con la materia seleccionada
+            }
+        }
     }
 
     return $disponibilidad;
 }
 
+// Obtener los datos para los filtros
+$materias = obtenerMaterias($conexion);
+$docentes = obtenerDocentes($conexion);
+$carreras = obtenerCarreras($conexion);
+$semestres = obtenerSemestres($conexion);
 
+$filtroMateria = isset($_GET['filtroMateria']) ? $_GET['filtroMateria'] : null;
+$filtroDocente = isset($_GET['filtroDocente']) ? $_GET['filtroDocente'] : null;
+$filtroCarrera = isset($_GET['filtroCarrera']) ? $_GET['filtroCarrera'] : null;
+$filtroSemestre = isset($_GET['filtroSemestre']) ? $_GET['filtroSemestre'] : null;
 
 $dias = obtenerDiasDeLaSemana($conexion);
 $horas = obtenerHorasDisponibles($conexion);
-$disponibilidad = obtenerDisponibilidad($conexion);
+$disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocente, $filtroCarrera, $filtroSemestre);
 ?>
 
 <!DOCTYPE html>
@@ -138,12 +219,18 @@ $disponibilidad = obtenerDisponibilidad($conexion);
         .draggable {
             display: inline-block;
         }
+        .dragging {
+            opacity: 0.5;
+        }
+        .droppable {
+            background-color: #e9ecef;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-5">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="dashboard.php">Dashboard</a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="vistad.php">Dashboard</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -163,115 +250,140 @@ $disponibilidad = obtenerDisponibilidad($conexion);
                 </ul>
             </div>
         </nav>
+        <h2>Generar Horarios</h2>
 
-        <h1 class="mt-4"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-clock" width="80" height="80" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-            <path d="M10.5 21h-4.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v3" />
-            <path d="M16 3v4" />
-            <path d="M8 3v4" />
-            <path d="M4 11h10" />
-            <path d="M18 18m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-            <path d="M18 16.5v1.5l.5 .5" />
-        </svg> Generar Horarios</h1>
+        <form method="get" class="mb-4">
+            <div class="form-row">
+                <div class="col-md-3">
+                    <label for="filtroMateria">Materia</label>
+                    <select name="filtroMateria" id="filtroMateria" class="form-control">
+                        <option value="">Todas</option>
+                        <?php foreach ($materias as $materia): ?>
+                            <option value="<?php echo $materia['id_materia']; ?>" <?php echo ($filtroMateria == $materia['id_materia']) ? 'selected' : ''; ?>>
+                                <?php echo $materia['nombre_materia']; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filtroDocente">Docente</label>
+                    <select name="filtroDocente" id="filtroDocente" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($docentes as $docente): ?>
+                            <option value="<?php echo $docente['id_docente']; ?>" <?php echo ($filtroDocente == $docente['id_docente']) ? 'selected' : ''; ?>>
+                                <?php echo $docente['nombre_d']; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filtroCarrera">Carrera</label>
+                    <select name="filtroCarrera" id="filtroCarrera" class="form-control">
+                        <option value="">Todas</option>
+                        <?php foreach ($carreras as $carrera): ?>
+                            <option value="<?php echo $carrera['id_carrera']; ?>" <?php echo ($filtroCarrera == $carrera['id_carrera']) ? 'selected' : ''; ?>>
+                                <?php echo $carrera['nombre_c']; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filtroSemestre">Semestre</label>
+                    <select name="filtroSemestre" id="filtroSemestre" class="form-control">
+                        <option value="">Todos</option>
+                        <?php foreach ($semestres as $semestre): ?>
+                            <option value="<?php echo $semestre; ?>" <?php echo ($filtroSemestre == $semestre) ? 'selected' : ''; ?>>
+                                <?php echo $semestre; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Aplicar Filtros</button>
+        </form>
 
         <table class="calendar-table">
             <thead>
                 <tr>
-                    <th>Hora</th>
-                    <?php foreach ($dias as $id_dia => $dia): ?>
-                        <th><?php echo htmlspecialchars($dia); ?></th>
+                    <th>Hora/Día</th>
+                    <?php foreach ($dias as $dia): ?>
+                        <th><?php echo $dia; ?></th>
                     <?php endforeach; ?>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($horas as $id_hora => $hora): ?>
+                <?php foreach ($horas as $horaId => $horaNombre): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($hora); ?></td>
-                        <?php foreach ($dias as $id_dia => $dia): ?>
-                            <td 
-                                data-toggle="modal" 
-                                data-target="#addSubjectModal" 
-                                data-id_docente="<?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora][0]['id_docente'] ?? ''); ?>"
-                                data-dia="<?php echo htmlspecialchars($id_dia); ?>"
-                                data-hora="<?php echo htmlspecialchars($id_hora); ?>"
-                                class="docente-cell"
-                            >
-                                <?php 
-                                $materias = $disponibilidad[$id_dia][$id_hora] ?? [];
-                                shuffle($materias); // Aleatoriza el array de materias
-                                foreach ($materias as $materia) {
-                                    echo '<div class="draggable" draggable="true" style="background-color: ' . htmlspecialchars($materia['color']) . ';">' . htmlspecialchars($materia['nombre_materia']) . '</div>';
-                                }
-                                ?>
+                        <td><?php echo $horaNombre; ?></td>
+                        <?php foreach ($dias as $diaId => $diaNombre): ?>
+                            <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>">
+                                <?php
+                                if (isset($disponibilidad[$diaId][$horaId])) {
+                                    foreach ($disponibilidad[$diaId][$horaId] as $materia): ?>
+                                        <div class="draggable" draggable="true" style="background-color: <?php echo htmlspecialchars($materia['color']); ?>">
+                                            <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                        </div>
+                                    <?php endforeach;
+                                } ?>
                             </td>
                         <?php endforeach; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
-
-      
-
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-        <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        let draggedElement = null;
-
-        document.querySelectorAll('.draggable').forEach(element => {
-            element.addEventListener('dragstart', (e) => {
-                draggedElement = e.target;
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', draggedElement.innerHTML); // Guarda el contenido en el DataTransfer
-            });
-
-            element.addEventListener('dragend', () => {
-                draggedElement = null;
-            });
-
-            element.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-
-            element.addEventListener('drop', (e) => {
-                e.preventDefault();
-                if (draggedElement && draggedElement !== e.target) {
-                    // Intercambia el contenido y el estilo del elemento
-                    const target = e.target;
-
-                    // Asegúrate de que el target sea un elemento con clase 'draggable' para evitar errores
-                    if (target.classList.contains('draggable')) {
-                        const draggedContent = draggedElement.innerHTML;
-                        const draggedStyle = draggedElement.getAttribute('style');
-
-                        // Intercambia el contenido y el estilo
-                        draggedElement.innerHTML = target.innerHTML;
-                        draggedElement.setAttribute('style', target.getAttribute('style'));
-
-                        target.innerHTML = draggedContent;
-                        target.setAttribute('style', draggedStyle);
-                    }
-                }
-            });
-        });
-
-        document.querySelectorAll('.docente-cell').forEach(cell => {
-            cell.addEventListener('click', (e) => {
-                const target = e.target;
-                const docenteId = target.dataset.id_docente || '';
-                const dia = target.dataset.dia || '';
-                const hora = target.dataset.hora || '';
-
-                document.getElementById('hiddenIdDocente').value = docenteId;
-                document.getElementById('hiddenDia').value = dia;
-                document.getElementById('hiddenHora').value = hora;
-            });
-        });
-    });
-</script>
-
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const draggables = document.querySelectorAll('.draggable');
+            const containers = document.querySelectorAll('.docente-cell');
+
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', () => {
+                    draggable.classList.add('dragging');
+                });
+
+                draggable.addEventListener('dragend', () => {
+                    draggable.classList.remove('dragging');
+                });
+            });
+
+            containers.forEach(container => {
+                container.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(container, e.clientY);
+                    const draggable = document.querySelector('.dragging');
+                    if (afterElement == null) {
+                        container.appendChild(draggable);
+                    } else {
+                        container.insertBefore(draggable, afterElement);
+                    }
+                    container.classList.add('droppable');
+                });
+
+                container.addEventListener('dragleave', () => {
+                    container.classList.remove('droppable');
+                });
+
+                container.addEventListener('drop', () => {
+                    container.classList.remove('droppable');
+                });
+            });
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+        });
+    </script>
 </body>
 </html>
