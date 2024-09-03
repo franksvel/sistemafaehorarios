@@ -132,6 +132,11 @@ $disponibilidad = obtenerDisponibilidad($conexion);
             color: #000;
             text-align: left;
             border-radius: 4px;
+            cursor: move;
+            background-color: #FFFFFF; /* Default background */
+        }
+        .draggable {
+            display: inline-block;
         }
     </style>
 </head>
@@ -170,124 +175,103 @@ $disponibilidad = obtenerDisponibilidad($conexion);
         </svg> Generar Horarios</h1>
 
         <table class="calendar-table">
-    <thead>
-        <tr>
-            <th>Hora</th>
-            <?php foreach ($dias as $id_dia => $dia): ?>
-                <th><?php echo htmlspecialchars($dia); ?></th>
-            <?php endforeach; ?>
-        </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($horas as $id_hora => $hora): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($hora); ?></td>
-            <?php foreach ($dias as $id_dia => $dia): ?>
-                <td 
-    data-toggle="modal" 
-    data-target="#addSubjectModal" 
-    data-id_docente="<?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora][0]['id_docente'] ?? ''); ?>"
-    data-dia="<?php echo htmlspecialchars($id_dia); ?>"
-    data-hora="<?php echo htmlspecialchars($id_hora); ?>"
-    class="docente-cell"
-    style="background-color: <?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora][0]['color'] ?? '#FFFFFF'); ?>;"
->
-    <?php 
-    $materias = $disponibilidad[$id_dia][$id_hora] ?? [];
-    foreach ($materias as $materia) {
-        echo '<div class="draggable" draggable="true" style="background-color: ' . htmlspecialchars($materia['color']) . ';">' . htmlspecialchars($materia['nombre_materia']) . '</div>';
-    }
-    ?>
-</td>
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <?php foreach ($dias as $id_dia => $dia): ?>
+                        <th><?php echo htmlspecialchars($dia); ?></th>
+                    <?php endforeach; ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($horas as $id_hora => $hora): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($hora); ?></td>
+                        <?php foreach ($dias as $id_dia => $dia): ?>
+                            <td 
+                                data-toggle="modal" 
+                                data-target="#addSubjectModal" 
+                                data-id_docente="<?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora][0]['id_docente'] ?? ''); ?>"
+                                data-dia="<?php echo htmlspecialchars($id_dia); ?>"
+                                data-hora="<?php echo htmlspecialchars($id_hora); ?>"
+                                class="docente-cell"
+                            >
+                                <?php 
+                                $materias = $disponibilidad[$id_dia][$id_hora] ?? [];
+                                shuffle($materias); // Aleatoriza el array de materias
+                                foreach ($materias as $materia) {
+                                    echo '<div class="draggable" draggable="true" style="background-color: ' . htmlspecialchars($materia['color']) . ';">' . htmlspecialchars($materia['nombre_materia']) . '</div>';
+                                }
+                                ?>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-            <?php endforeach; ?>
-        </tr>
-    <?php endforeach; ?>
-</tbody>
+      
 
-</table>
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let draggedElement = null;
 
-           
+        document.querySelectorAll('.draggable').forEach(element => {
+            element.addEventListener('dragstart', (e) => {
+                draggedElement = e.target;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedElement.innerHTML); // Guarda el contenido en el DataTransfer
+            });
 
-                 
+            element.addEventListener('dragend', () => {
+                draggedElement = null;
+            });
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    let draggedElement = null;
+            element.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
 
-    document.querySelectorAll('.draggable').forEach(element => {
-        element.addEventListener('dragstart', (e) => {
-            draggedElement = e.target;
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', draggedElement.innerHTML);
+            element.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (draggedElement && draggedElement !== e.target) {
+                    // Intercambia el contenido y el estilo del elemento
+                    const target = e.target;
+
+                    // Asegúrate de que el target sea un elemento con clase 'draggable' para evitar errores
+                    if (target.classList.contains('draggable')) {
+                        const draggedContent = draggedElement.innerHTML;
+                        const draggedStyle = draggedElement.getAttribute('style');
+
+                        // Intercambia el contenido y el estilo
+                        draggedElement.innerHTML = target.innerHTML;
+                        draggedElement.setAttribute('style', target.getAttribute('style'));
+
+                        target.innerHTML = draggedContent;
+                        target.setAttribute('style', draggedStyle);
+                    }
+                }
+            });
         });
 
-        element.addEventListener('dragend', () => {
-            draggedElement = null;
+        document.querySelectorAll('.docente-cell').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const target = e.target;
+                const docenteId = target.dataset.id_docente || '';
+                const dia = target.dataset.dia || '';
+                const hora = target.dataset.hora || '';
+
+                document.getElementById('hiddenIdDocente').value = docenteId;
+                document.getElementById('hiddenDia').value = dia;
+                document.getElementById('hiddenHora').value = hora;
+            });
         });
     });
+</script>
 
-    document.querySelectorAll('.docente-cell').forEach(cell => {
-        cell.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        });
-
-        cell.addEventListener('drop', (e) => {
-            e.preventDefault();
-            if (draggedElement && draggedElement !== e.target && e.target.classList.contains('docente-cell')) {
-                const targetCell = e.target;
-                const targetCellId = targetCell.dataset;
-                
-                // Actualiza la base de datos
-                actualizarAsignacion(draggedElement, targetCellId);
-                
-                // Mueve el contenido
-                targetCell.appendChild(draggedElement);
-            }
-        });
-    });
-
-    function actualizarAsignacion(draggedElement, targetCellId) {
-        const draggedData = {
-            id_docente_origen: draggedElement.dataset.id_docente,
-            dia_origen: draggedElement.dataset.dia,
-            hora_origen: draggedElement.dataset.hora
-        };
-        
-        const targetData = {
-            id_docente_destino: targetCellId.id_docente,
-            dia_destino: targetCellId.dia,
-            hora_destino: targetCellId.hora
-        };
-
-        fetch('actualizar_asignacion.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                ...draggedData,
-                ...targetData
-            }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log('Asignación actualizada exitosamente.');
-            } else {
-                alert('Error al actualizar la asignación.');
-            }
-        });
-    }
-});
-
-               
-
-        
-    </script>
+    </div>
 </body>
 </html>
