@@ -41,83 +41,42 @@ function obtenerHorasDisponibles($conexion) {
 }
 function obtenerDisponibilidad($conexion) {
     $disponibilidad = [];
-    // Asegúrate de que los nombres de las columnas sean correctos
-    $consulta = "SELECT d.id_docente, d.dia, d.hora, d.color, p.nombre_d AS nombre
-                 FROM disponibilidad_docente d
-                 INNER JOIN docente p ON d.id_docente = p.id_docente";
+
+    // Consulta SQL para obtener la disponibilidad combinada de las tablas general, docente, asignacion y materia
+    $consulta = "SELECT d.id_docente, d.id_dia, d.id_hora, m.nombre_materia, m.color
+                 FROM general d
+                 INNER JOIN asignacion a ON d.id_docente = a.id_docente
+                 INNER JOIN materia m ON a.id_materia = m.id_materia";
+
     $resultado = $conexion->query($consulta);
+
     if ($resultado && $resultado->num_rows > 0) {
         while ($fila = $resultado->fetch_assoc()) {
-            $dia = $fila['dia'];
-            $hora = $fila['hora'];
+            $dia = $fila['id_dia'];
+            $hora = $fila['id_hora'];
             if (!isset($disponibilidad[$dia])) {
                 $disponibilidad[$dia] = [];
             }
-            $disponibilidad[$dia][$hora] = [
+            if (!isset($disponibilidad[$dia][$hora])) {
+                $disponibilidad[$dia][$hora] = [];
+            }
+            // Añadir la disponibilidad a la hora correspondiente, incluyendo la materia asignada
+            $disponibilidad[$dia][$hora][] = [
                 'id_docente' => $fila['id_docente'],
-                'nombre' => $fila['nombre'],
+                'nombre_materia' => $fila['nombre_materia'],
                 'color' => $fila['color']
             ];
         }
     }
+
     return $disponibilidad;
 }
 
 
 
-// Obtener los días, horas y disponibilidad
 $dias = obtenerDiasDeLaSemana($conexion);
 $horas = obtenerHorasDisponibles($conexion);
 $disponibilidad = obtenerDisponibilidad($conexion);
-
-// Función para asignar materias aleatoriamente a los espacios seleccionados
-function asignarMateriasAleatoriamente($conexion, $horas_seleccionadas, $dias_seleccionados) {
-    // Obtener las materias disponibles
-    $materias_query = "SELECT id_materia, nombre_materia FROM materia";
-    $materias_result = $conexion->query($materias_query);
-    $materias = [];
-    while ($row = $materias_result->fetch_assoc()) {
-        $materias[] = $row;
-    }
-
-    // Asignar materias aleatoriamente a los espacios seleccionados
-    foreach ($dias_seleccionados as $dia) {
-        foreach ($horas_seleccionadas as $hora) {
-            $materia = $materias[array_rand($materias)];
-            $id_materia = $materia['id_materia'];
-            $insert_query = "INSERT INTO espacios (hora, dia, id_materia) VALUES (?, ?, ?)
-                             ON DUPLICATE KEY UPDATE id_materia = VALUES(id_materia)";
-            $stmt = $conexion->prepare($insert_query);
-            $stmt->bind_param('sss', $hora, $dia, $id_materia);
-            $stmt->execute();
-        }
-    }
-}
-
-function asignarMateria($conexion, $id_docente, $id_materia, $id_dia, $id_hora, $color) {
-    // Verificar si ya existe una asignación en esa hora y día usando INNER JOIN
-    $consulta = "
-        SELECT g.id_docente, a.id_materia, a.dia, a.hora
-        FROM general g
-        INNER JOIN asignacion a ON g.id_docente = a.id_docente
-        WHERE a.id_docente = ? AND a.dia = ? AND a.hora = ?";
-    $stmt = $conexion->prepare($consulta);
-    $stmt->bind_param('sss', $id_docente, $id_dia, $id_hora);
-    $stmt->execute();
-    $resultado = $stmt->get_result();
-
-    if ($resultado->num_rows > 0) {
-        // Actualizar la asignación existente
-        $consulta = "UPDATE asignacion SET id_materia = ?, color = ? WHERE id_docente = ? AND dia = ? AND hora = ?";
-    } else {
-        // Insertar una nueva asignación
-        $consulta = "INSERT INTO asignacion (id_docente, id_materia, dia, hora, color) VALUES (?, ?, ?, ?, ?)";
-    }
-
-    $stmt = $conexion->prepare($consulta);
-    $stmt->bind_param('sssss', $id_materia, $color, $id_docente, $id_dia, $id_hora);
-    $stmt->execute();
-}
 ?>
 
 <!DOCTYPE html>
@@ -167,19 +126,12 @@ function asignarMateria($conexion, $id_docente, $id_materia, $id_dia, $id_hora, 
             position: relative;
             cursor: pointer;
         }
-        .docente-cell::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--cell-color, #FFFFFF);
-            opacity: 0.2;
-            z-index: 1;
-        }
-        .docente-cell {
-            background-color: var(--cell-color, #FFFFFF);
+        .docente-cell div {
+            padding: 2px;
+            margin: 2px 0;
+            color: #000;
+            text-align: left;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -218,143 +170,124 @@ function asignarMateria($conexion, $id_docente, $id_materia, $id_dia, $id_hora, 
         </svg> Generar Horarios</h1>
 
         <table class="calendar-table">
-            <thead>
-                <tr>
-                    <th>Hora</th>
-                    <?php foreach ($dias as $id_dia => $dia): ?>
-                        <th><?php echo htmlspecialchars($dia); ?></th>
-                    <?php endforeach; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($horas as $id_hora => $hora): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($hora); ?></td>
-                        <?php foreach ($dias as $id_dia => $dia): ?>
-                            <td 
-                                data-toggle="modal" 
-                                data-target="#addSubjectModal" 
-                                data-id_docente="<?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora]['id_docente'] ?? ''); ?>"
-                                data-dia="<?php echo htmlspecialchars($id_dia); ?>"
-                                data-hora="<?php echo htmlspecialchars($id_hora); ?>"
-                                class="draggable docente-cell"
-                                draggable="true"
-                                style="background-color: <?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora]['color'] ?? '#FFFFFF'); ?>;"
-                            >
-                                <?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora]['nombre'] ?? 'No asignado'); ?>
-                            </td>
-                        <?php endforeach; ?>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+    <thead>
+        <tr>
+            <th>Hora</th>
+            <?php foreach ($dias as $id_dia => $dia): ?>
+                <th><?php echo htmlspecialchars($dia); ?></th>
+            <?php endforeach; ?>
+        </tr>
+    </thead>
+    <tbody>
+    <?php foreach ($horas as $id_hora => $hora): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($hora); ?></td>
+            <?php foreach ($dias as $id_dia => $dia): ?>
+                <td 
+    data-toggle="modal" 
+    data-target="#addSubjectModal" 
+    data-id_docente="<?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora][0]['id_docente'] ?? ''); ?>"
+    data-dia="<?php echo htmlspecialchars($id_dia); ?>"
+    data-hora="<?php echo htmlspecialchars($id_hora); ?>"
+    class="docente-cell"
+    style="background-color: <?php echo htmlspecialchars($disponibilidad[$id_dia][$id_hora][0]['color'] ?? '#FFFFFF'); ?>;"
+>
+    <?php 
+    $materias = $disponibilidad[$id_dia][$id_hora] ?? [];
+    foreach ($materias as $materia) {
+        echo '<div class="draggable" draggable="true" style="background-color: ' . htmlspecialchars($materia['color']) . ';">' . htmlspecialchars($materia['nombre_materia']) . '</div>';
+    }
+    ?>
+</td>
 
-        <div class="modal fade" id="addSubjectModal" tabindex="-1" role="dialog" aria-labelledby="addSubjectModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addSubjectModalLabel">Agregar Materia</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="guardar_materia.php" method="POST">
-                            <input type="hidden" id="modal_id_docente" name="id_docente">
-                            <input type="hidden" id="modal_id_dia" name="id_dia">
-                            <input type="hidden" id="modal_id_hora" name="id_hora">
-                            <div class="form-group">
-                                <label for="id_materia">Selecciona la materia*</label>
-                                <select name="id_materia" id="id_materia" class="form-control" required>
-                                    <?php
-                                    $query = "SELECT id_materia, nombre_materia FROM materia ORDER BY id_materia";
-                                    $result = $conexion->query($query);
-                                    while ($row = $result->fetch_assoc()) {
-                                        $id = $row['id_materia'];
-                                        $nombre = $row['nombre_materia'];
-                                        echo "<option value='$id'>$nombre</option>";
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="color">Selecciona el color*</label>
-                                <input type="color" id="color" name="color" class="form-control" value="#FFFFFF" required>
-                            </div>
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+            <?php endforeach; ?>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
+
+</table>
+
+           
+
+                 
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        let draggedElement = null;
+  document.addEventListener('DOMContentLoaded', () => {
+    let draggedElement = null;
 
-        document.querySelectorAll('.draggable').forEach(element => {
-            element.addEventListener('dragstart', (e) => {
-                draggedElement = e.target;
-                e.dataTransfer.effectAllowed = 'move';
-            });
-
-            element.addEventListener('dragend', () => {
-                draggedElement = null;
-            });
-
-            element.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-
-            element.addEventListener('drop', (e) => {
-                e.preventDefault();
-                if (draggedElement && draggedElement !== e.target) {
-                    const draggedContent = draggedElement.innerHTML;
-                    const targetContent = e.target.innerHTML;
-                    const draggedData = draggedElement.dataset;
-                    const targetData = e.target.dataset;
-
-                    e.target.innerHTML = draggedContent;
-                    draggedElement.innerHTML = targetContent;
-
-                    // Actualizar base de datos
-                    actualizarAsignacion(draggedData, targetData);
-                }
-            });
+    document.querySelectorAll('.draggable').forEach(element => {
+        element.addEventListener('dragstart', (e) => {
+            draggedElement = e.target;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', draggedElement.innerHTML);
         });
 
-        function actualizarAsignacion(draggedData, targetData) {
-            fetch('actualizar_asignacion.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id_docente_origen: draggedData.id_docente,
-                    dia_origen: draggedData.dia,
-                    hora_origen: draggedData.hora,
-                    id_docente_destino: targetData.id_docente,
-                    dia_destino: targetData.dia,
-                    hora_destino: targetData.hora
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Asignación actualizada exitosamente.');
-                } else {
-                    alert('Error al actualizar la asignación.');
-                }
-            });
-        }
+        element.addEventListener('dragend', () => {
+            draggedElement = null;
+        });
     });
+
+    document.querySelectorAll('.docente-cell').forEach(cell => {
+        cell.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        cell.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (draggedElement && draggedElement !== e.target && e.target.classList.contains('docente-cell')) {
+                const targetCell = e.target;
+                const targetCellId = targetCell.dataset;
+                
+                // Actualiza la base de datos
+                actualizarAsignacion(draggedElement, targetCellId);
+                
+                // Mueve el contenido
+                targetCell.appendChild(draggedElement);
+            }
+        });
+    });
+
+    function actualizarAsignacion(draggedElement, targetCellId) {
+        const draggedData = {
+            id_docente_origen: draggedElement.dataset.id_docente,
+            dia_origen: draggedElement.dataset.dia,
+            hora_origen: draggedElement.dataset.hora
+        };
+        
+        const targetData = {
+            id_docente_destino: targetCellId.id_docente,
+            dia_destino: targetCellId.dia,
+            hora_destino: targetCellId.hora
+        };
+
+        fetch('actualizar_asignacion.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ...draggedData,
+                ...targetData
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Asignación actualizada exitosamente.');
+            } else {
+                alert('Error al actualizar la asignación.');
+            }
+        });
+    }
+});
+
+               
+
+        
     </script>
 </body>
 </html>

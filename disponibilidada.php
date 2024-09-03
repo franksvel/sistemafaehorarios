@@ -216,6 +216,20 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label for="id_semestre">Selecciona el semestre</label>
+                                <select name="id_semestre" id="id_semestre" class="form-control" required>
+                                    <?php
+                                    $query = "SELECT * FROM semestre ORDER BY id_semestre";
+                                    $result = mysqli_query($conexion, $query);
+                                    while ($row = mysqli_fetch_array($result)) {
+                                        $id = $row['id_semestre'];
+                                        $nombre = $row['nombre'];
+                                        echo "<option value='$id'>$nombre</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Selecciona el día</label>
                                 <div class="d-flex flex-wrap">
                                     <?php
@@ -252,20 +266,6 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     }
                                     ?>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="id_semestre">Selecciona el semestre</label>
-                                <select name="id_semestre" id="id_semestre" class="form-control" required>
-                                    <?php
-                                    $query = "SELECT * FROM semestre ORDER BY id_semestre";
-                                    $result = mysqli_query($conexion, $query);
-                                    while ($row = mysqli_fetch_array($result)) {
-                                        $id = $row['id_semestre'];
-                                        $nombre = $row['nombre'];
-                                        echo "<option value='$id'>$nombre</option>";
-                                    }
-                                    ?>
-                                </select>
                             </div>
                             <input type="submit" class="btn btn-primary" value="Guardar">
                         </form>
