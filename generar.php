@@ -79,7 +79,6 @@ function obtenerHorasDisponibles($conexion) {
     }
     return $horas;
 }
-
 function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente = null, $filtroCarrera = null, $filtroSemestre = null) {
     $disponibilidad = [];
 
@@ -123,7 +122,7 @@ function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente 
                 $disponibilidad[$dia][$hora] = [];
             }
 
-            // Asignar aleatoriamente una de las materias que el docente tiene disponibles para esa hora y día
+            // Agregar todas las materias asignadas a esa hora y día
             $disponibilidad[$dia][$hora][] = [
                 'id_docente' => $fila['id_docente'],
                 'nombre_materia' => $fila['nombre_materia'],
@@ -131,18 +130,22 @@ function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente 
             ];
         }
 
-        // Hacer la asignación aleatoria
+        // Hacer la asignación aleatoria para cada celda
         foreach ($disponibilidad as $dia => &$horas) {
-            foreach ($horas as $hora => &$docenteMaterias) {
-                // Selecciona una materia aleatoria de las asignadas al docente para esa hora
-                $materiaAleatoria = $docenteMaterias[array_rand($docenteMaterias)];
-                $docenteMaterias = [$materiaAleatoria];  // Sobrescribe con la materia seleccionada
+            foreach ($horas as $hora => &$materias) {
+                if (count($materias) > 0) {
+                    // Selecciona una materia aleatoria de las asignadas
+                    $materiaAleatoria = $materias[array_rand($materias)];
+                    $horas[$hora] = [$materiaAleatoria]; // Sobrescribe con la materia seleccionada
+                }
             }
         }
     }
 
     return $disponibilidad;
 }
+
+
 
 // Obtener los datos para los filtros
 $materias = obtenerMaterias($conexion);
@@ -304,34 +307,42 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
         </form>
 
         <table class="calendar-table">
-            <thead>
-                <tr>
-                    <th>Hora/Día</th>
-                    <?php foreach ($dias as $dia): ?>
-                        <th><?php echo $dia; ?></th>
-                    <?php endforeach; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($horas as $horaId => $horaNombre): ?>
-                    <tr>
-                        <td><?php echo $horaNombre; ?></td>
-                        <?php foreach ($dias as $diaId => $diaNombre): ?>
-                            <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>">
-                                <?php
-                                if (isset($disponibilidad[$diaId][$horaId])) {
-                                    foreach ($disponibilidad[$diaId][$horaId] as $materia): ?>
-                                        <div class="draggable" draggable="true" style="background-color: <?php echo htmlspecialchars($materia['color']); ?>">
-                                            <?php echo htmlspecialchars($materia['nombre_materia']); ?>
-                                        </div>
-                                    <?php endforeach;
-                                } ?>
-                            </td>
-                        <?php endforeach; ?>
-                    </tr>
+    <thead>
+        <tr>
+            <th>Hora/Día</th>
+            <?php foreach ($dias as $dia): ?>
+                <th><?php echo $dia; ?></th>
+            <?php endforeach; ?>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($horas as $horaId => $horaNombre): ?>
+            <tr>
+                <td><?php echo $horaNombre; ?></td>
+                <?php foreach ($dias as $diaId => $diaNombre): ?>
+                    <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>">
+                        <?php
+                        if (isset($disponibilidad[$diaId][$horaId])) {
+                            $materias = $disponibilidad[$diaId][$horaId];
+                            $numMaterias = count($materias);
+                            $visibleMaterias = array_slice($materias, 0, 3); // Muestra solo las primeras 3 materias
+                            foreach ($visibleMaterias as $materia): ?>
+                                <div class="draggable" draggable="true" style="background-color: <?php echo htmlspecialchars($materia['color']); ?>">
+                                    <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                </div>
+                            <?php endforeach;
+                            if ($numMaterias > 3): ?>
+                                <div class="more-materias" onclick="showMoreMaterias(this, <?php echo $horaId; ?>, <?php echo $diaId; ?>)">
+                                    +<?php echo $numMaterias - 3; ?> más
+                                </div>
+                            <?php endif;
+                        } ?>
+                    </td>
                 <?php endforeach; ?>
-            </tbody>
-        </table>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
     </div>
 
     <script>
