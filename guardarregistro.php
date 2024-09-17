@@ -9,11 +9,6 @@ if (mysqli_connect_errno()) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $materia = $_POST['nombre_materia'];
 
-    // Función para generar un color hexadecimal aleatorio
-    function generarColorHexadecimal() {
-        return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
-    }
-
     // Consultar si la materia ya existe
     $consultar_registro = "SELECT nombre_materia FROM materia WHERE nombre_materia = '$materia'";
     $resultado = mysqli_query($conexion, $consultar_registro);
@@ -42,11 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
               </body>
               </html>';
     } else {
-        // Generar un color aleatorio
-        $color = generarColorHexadecimal();
+
 
         // Insertar la nueva materia con el color en la base de datos
-        $sql = "INSERT INTO materia (nombre_materia, color) VALUES ('$materia', '$color')";
+        $sql = "INSERT INTO materia (nombre_materia) VALUES ('$materia')";
         $resultado = mysqli_query($conexion, $sql);
 
         if ($resultado) {

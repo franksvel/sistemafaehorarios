@@ -6,7 +6,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_dia = $_POST['id_dia'];
     $id_hora = $_POST['id_hora'];
     $id_materia = $_POST['id_materia'];
-    $color = $_POST['color'];
 
     // Verificar si ya existe una entrada para este docente, día y hora
     $query = "SELECT * FROM materia_docente WHERE id_docente = ? AND id_dia = ? AND id_hora = ?";
@@ -17,14 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($result->num_rows > 0) {
         // Actualizar la entrada existente
-        $query = "UPDATE materia_docente SET id_materia = ?, color = ? WHERE id_docente = ? AND id_dia = ? AND id_hora = ?";
+        $query = "UPDATE materia_docente SET id_materia = ? WHERE id_docente = ? AND id_dia = ? AND id_hora = ?";
         $stmt = $conexion->prepare($query);
-        $stmt->bind_param('isiii', $id_materia, $color, $id_docente, $id_dia, $id_hora);
+        $stmt->bind_param('iiii', $id_materia, $id_docente, $id_dia, $id_hora);
     } else {
         // Insertar nueva entrada
-        $query = "INSERT INTO materia_docente (id_docente, id_dia, id_hora, id_materia, color) VALUES (?, ?, ?, ?, ?)";
+        $query = "INSERT INTO materia_docente (id_docente, id_dia, id_hora, id_materia) VALUES (?, ?, ?, ?)";
         $stmt = $conexion->prepare($query);
-        $stmt->bind_param('iiiis', $id_docente, $id_dia, $id_hora, $id_materia, $color);
+        $stmt->bind_param('iiii', $id_docente, $id_dia, $id_hora, $id_materia);
     }
 
     if ($stmt->execute()) {

@@ -27,7 +27,7 @@ $materias_result = mysqli_query($conexion, $materias_query);
 
 // Modificar consulta para obtener la información necesaria
 $asignaciones_query = "SELECT a.id_docente, d.nombre_d, d.apellido_p, d.apellido_m, 
-                       a.id_materia, m.nombre_materia, m.color
+                       a.id_materia, m.nombre_materia
                        FROM asignacion a
                        JOIN docente d ON a.id_docente = d.id_docente
                        JOIN materia m ON a.id_materia = m.id_materia";
@@ -132,7 +132,6 @@ $asignaciones_result = mysqli_query($conexion, $asignaciones_query);
                 <div class="modal-body">
                     <p><strong>Docente:</strong> <span id="confirm-docente"></span></p>
                     <p><strong>Materia:</strong> <span id="confirm-materia"></span></p>
-                    <p><strong>Color:</strong> <span id="confirm-color"></span></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -155,7 +154,6 @@ $asignaciones_result = mysqli_query($conexion, $asignaciones_query);
                 <div class="modal-body">
                     <p><strong>Docente:</strong> <span id="modal-docente"></span></p>
                     <p><strong>Materia:</strong> <span id="modal-materia"></span></p>
-                    <p><strong>Color:</strong> <span id="modal-color"></span></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
@@ -170,7 +168,6 @@ $asignaciones_result = mysqli_query($conexion, $asignaciones_query);
                 <tr>
                     <th>Docente</th>
                     <th>Materia</th>
-                    <th>Color</th>
                     <th>Acción</th>
                 </tr>
             </thead>
@@ -181,12 +178,10 @@ $asignaciones_result = mysqli_query($conexion, $asignaciones_query);
                     <tr>
                         <td><?php echo htmlspecialchars($row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m']); ?></td>
                         <td><?php echo htmlspecialchars($row['nombre_materia']); ?></td>
-                        <td style="background-color: <?php echo htmlspecialchars($row['color']); ?>;"><?php echo htmlspecialchars($row['color']); ?></td>
                         <td>
                             <button type="button" class="btn btn-info" data-toggle="modal" data-target="#detailsModal"
                                     data-docente="<?php echo htmlspecialchars($row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m']); ?>"
                                     data-materia="<?php echo htmlspecialchars($row['nombre_materia']); ?>"
-                                    data-color="<?php echo htmlspecialchars($row['color']); ?>">
                                 Ver Detalles
                             </button>
                         </td>

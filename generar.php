@@ -102,7 +102,7 @@ function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente 
     }
 
     // Obtener la disponibilidad y asignación del docente con las materias que puede impartir
-    $consulta = "SELECT d.id_docente, d.id_dia, d.id_hora, m.id_materia, m.nombre_materia, m.color
+    $consulta = "SELECT d.id_docente, d.id_dia, d.id_hora, m.id_materia, m.nombre_materia
                  FROM general d
                  INNER JOIN asignacion a ON d.id_docente = a.id_docente
                  INNER JOIN materia m ON a.id_materia = m.id_materia
@@ -126,7 +126,6 @@ function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente 
             $disponibilidad[$dia][$hora][] = [
                 'id_docente' => $fila['id_docente'],
                 'nombre_materia' => $fila['nombre_materia'],
-                'color' => $fila['color']
             ];
         }
 
@@ -302,7 +301,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">Aplicar Filtros</button>
+            <button type="submit" class="btn btn-primary mt-3">Generar Horarios</button>
             <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Refrescar Tabla</button>
         </form>
 

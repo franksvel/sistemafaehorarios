@@ -66,7 +66,6 @@ $service = new Google_Service_Gmail($client);
             <thead>
                 <tr>
                     <th>Nombre(s)</th>
-                    <th>Color</th>
                     <th>Acción</th>
                 </tr>
             </thead>
@@ -79,9 +78,7 @@ $service = new Google_Service_Gmail($client);
                 ?>
                     <tr>
                         <td><?php echo htmlspecialchars($mostrar['nombre_materia']); ?></td>
-                        <td>
-                            <div style="width: 30px; height: 30px; background-color: <?php echo htmlspecialchars($mostrar['color']); ?>;"></div>
-                        </td>
+                       
                         <td>
                             <a class="btn btn-danger" href="borrarmateria.php?id_materia=<?php echo urlencode($mostrar['id_materia']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
                             <button 
