@@ -20,15 +20,19 @@ $service = new Google_Service_Gmail($client);
 include 'db.php';
 
 // Obtención de los datos
-$sql = "SELECT a.id_docente, d.nombre_d, d.apellido_p, d.apellido_m, c.nombre_c, di.nombre_dia, h.nombre_hora
-        FROM asignacion a
-        JOIN docente d ON a.id_docente = d.id_docente
-        JOIN carrera c ON a.id_carrera = c.id_carrera
-        JOIN dia di ON a.id_dia = di.id_dia
-        JOIN disponibilidad h ON a.id_hora = h.id_hora
-        JOIN materia m ON a.id_materia = m.id_materia
+$sql = "SELECT g.id_docente, g.id_carrera, 
+               d.nombre_d, d.apellido_p, d.apellido_m, 
+               c.nombre_c, 
+               di.nombre_dia, 
+               h.nombre_hora,
+               s.nombre AS semestre_nombre
+        FROM general g
+        JOIN docente d ON g.id_docente = d.id_docente
+        JOIN carrera c ON g.id_carrera = c.id_carrera
+        JOIN dia di ON g.id_dia = di.id_dia
+        JOIN disponibilidad h ON g.id_hora = h.id_hora
+        JOIN semestre s ON g.id_semestre = s.id_semestre
         ORDER BY d.nombre_d, di.nombre_dia, h.nombre_hora";
-
 
 $result = mysqli_query($conexion, $sql);
 

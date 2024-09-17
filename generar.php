@@ -301,8 +301,8 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">Generar Horarios</button>
-            <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Refrescar Tabla</button>
+            <button type="submit" class="btn btn-primary mt-3">Filtrar</button>
+            <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Generar Horarios</button>
         </form>
 
         <table class="calendar-table">
