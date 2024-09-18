@@ -1,27 +1,27 @@
 <?php
-require_once 'vendor/autoload.php';
+require_once 'db.php';
 
-session_start();
+// Obtén todas las carreras
+$sql = "SELECT * FROM carrera";
+$result = mysqli_query($conexion, $sql);
 
-$client = new Google_Client();
-$client->setClientId('737255136278-udfv56p46c9u8tqo6l61kt251aodu28p.apps.googleusercontent.com');
-$client->setClientSecret('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');
-$client->setRedirectUri('http://localhost/sistemafaehorarios/auth.php');
-$client->addScope(Google_Service_Gmail::GMAIL_READONLY);
-
-if (!isset($_SESSION['access_token']) || $_SESSION['access_token'] === null) {
-    header('Location: http://localhost/sistemafaehorarios/index.php');
-    exit();
+// Función para generar colores aleatorios
+function generarColorAleatorio() {
+    return sprintf('#%06X', mt_rand(0, 0xFFFFFF));
 }
 
-$client->setAccessToken($_SESSION['access_token']);
-$service = new Google_Service_Gmail($client);
-
-// Función para generar un color hexadecimal aleatorio
-function getRandomColor() {
-    $color = sprintf('#%06X', mt_rand(0, 0xFFFFFF));
-    return $color;
+// Actualiza colores si están vacíos
+while ($mostrar = mysqli_fetch_array($result)) {
+    if (empty($mostrar['color'])) {
+        $color = generarColorAleatorio();
+        $id_carrera = $mostrar['id_carrera'];
+        $updateColorSql = "UPDATE carrera SET color = '$color' WHERE id_carrera = $id_carrera";
+        mysqli_query($conexion, $updateColorSql);
+    }
 }
+
+// Vuelve a obtener las carreras después de actualizar colores
+$result = mysqli_query($conexion, $sql);
 ?>
 
 <!DOCTYPE html>
@@ -32,10 +32,8 @@ function getRandomColor() {
     <title>Carrera</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="style.css">
     <style>
         .color-box {
             height: 30px;
@@ -87,14 +85,11 @@ function getRandomColor() {
             </thead>
             <tbody>
             <?php
-                include 'db.php';
-                $sql = "SELECT * FROM carrera";
-                $result = mysqli_query($conexion, $sql);
                 while ($mostrar = mysqli_fetch_array($result)) {
-                    $color = getRandomColor();
+                    $color = htmlspecialchars($mostrar['color']);
             ?>
                 <tr>
-                    <td><?php echo $mostrar['nombre_c']; ?></td>
+                    <td><?php echo htmlspecialchars($mostrar['nombre_c']); ?></td>
                     <td>
                         <span class="color-box" style="background-color: <?php echo $color; ?>;"></span>
                         <?php echo $color; ?>
@@ -106,8 +101,8 @@ function getRandomColor() {
                             class="btn btn-primary btn-edit" 
                             data-toggle="modal" 
                             data-target="#exampleModal1"
-                            data-id="<?php echo $mostrar['id_carrera']; ?>" 
-                            data-nombre="<?php echo $mostrar['nombre_c']; ?>">
+                            data-id="<?php echo htmlspecialchars($mostrar['id_carrera']); ?>" 
+                            data-nombre="<?php echo htmlspecialchars($mostrar['nombre_c']); ?>">
                             <i class="fa-sharp fa-solid fa-pencil"></i>
                         </button>
                     </td>

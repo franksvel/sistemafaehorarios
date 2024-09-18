@@ -19,7 +19,73 @@ $service = new Google_Service_Gmail($client);
 // Incluir el archivo de conexión a la base de datos
 include 'db.php';
 
-// Funciones para obtener los datos necesarios para los filtros
+// Función principal para obtener disponibilidad con aleatorización
+function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente = null, $filtroCarrera = null, $filtroSemestre = null) {
+    $disponibilidad = [];
+    $conditions = [];
+
+    if ($filtroMateria) {
+        $conditions[] = "m.id_materia = " . intval($filtroMateria);
+    }
+    if ($filtroDocente) {
+        $conditions[] = "d.id_docente = " . intval($filtroDocente);
+    }
+    if ($filtroCarrera) {
+        $conditions[] = "a.id_carrera = " . intval($filtroCarrera);
+    }
+    if ($filtroSemestre) {
+        $conditions[] = "d.id_semestre = " . intval($filtroSemestre);
+    }
+
+    $conditionString = implode(" AND ", $conditions);
+    if ($conditionString) {
+        $conditionString = "WHERE " . $conditionString;
+    }
+
+    // Obtener la disponibilidad y asignación del docente con las materias que puede impartir
+    $consulta = "SELECT d.id_docente, d.id_dia, d.id_hora, m.id_materia, m.nombre_materia
+                 FROM general d
+                 INNER JOIN asignacion a ON d.id_docente = a.id_docente
+                 INNER JOIN materia m ON a.id_materia = m.id_materia
+                 $conditionString";
+
+    $resultado = $conexion->query($consulta);
+
+    if ($resultado && $resultado->num_rows > 0) {
+        while ($fila = $resultado->fetch_assoc()) {
+            $dia = $fila['id_dia'];
+            $hora = $fila['id_hora'];
+
+            if (!isset($disponibilidad[$dia])) {
+                $disponibilidad[$dia] = [];
+            }
+            if (!isset($disponibilidad[$dia][$hora])) {
+                $disponibilidad[$dia][$hora] = [];
+            }
+
+            // Agregar todas las materias asignadas a esa hora y día
+            $disponibilidad[$dia][$hora][] = [
+                'id_docente' => $fila['id_docente'],
+                'nombre_materia' => $fila['nombre_materia'],
+            ];
+        }
+
+        // Hacer la asignación aleatoria para cada celda
+        foreach ($disponibilidad as $dia => &$horas) {
+            foreach ($horas as $hora => &$materias) {
+                if (count($materias) > 0) {
+                    // Selecciona una materia aleatoria de las asignadas
+                    $materiaAleatoria = $materias[array_rand($materias)];
+                    $horas[$hora] = [$materiaAleatoria]; // Sobrescribe con la materia seleccionada
+                }
+            }
+        }
+    }
+
+    return $disponibilidad;
+}
+
+// Funciones auxiliares
 function obtenerMaterias($conexion) {
     $query = "SELECT id_materia, nombre_materia FROM materia ORDER BY nombre_materia";
     $result = $conexion->query($query);
@@ -79,72 +145,6 @@ function obtenerHorasDisponibles($conexion) {
     }
     return $horas;
 }
-function obtenerDisponibilidad($conexion, $filtroMateria = null, $filtroDocente = null, $filtroCarrera = null, $filtroSemestre = null) {
-    $disponibilidad = [];
-
-    $conditions = [];
-    if ($filtroMateria) {
-        $conditions[] = "m.id_materia = " . intval($filtroMateria);
-    }
-    if ($filtroDocente) {
-        $conditions[] = "d.id_docente = " . intval($filtroDocente);
-    }
-    if ($filtroCarrera) {
-        $conditions[] = "a.id_carrera = " . intval($filtroCarrera);
-    }
-    if ($filtroSemestre) {
-        $conditions[] = "d.semestre = " . intval($filtroSemestre);
-    }
-
-    $conditionString = implode(" AND ", $conditions);
-    if ($conditionString) {
-        $conditionString = "WHERE " . $conditionString;
-    }
-
-    // Obtener la disponibilidad y asignación del docente con las materias que puede impartir
-    $consulta = "SELECT d.id_docente, d.id_dia, d.id_hora, m.id_materia, m.nombre_materia
-                 FROM general d
-                 INNER JOIN asignacion a ON d.id_docente = a.id_docente
-                 INNER JOIN materia m ON a.id_materia = m.id_materia
-                 $conditionString";
-
-    $resultado = $conexion->query($consulta);
-
-    if ($resultado && $resultado->num_rows > 0) {
-        while ($fila = $resultado->fetch_assoc()) {
-            $dia = $fila['id_dia'];
-            $hora = $fila['id_hora'];
-
-            if (!isset($disponibilidad[$dia])) {
-                $disponibilidad[$dia] = [];
-            }
-            if (!isset($disponibilidad[$dia][$hora])) {
-                $disponibilidad[$dia][$hora] = [];
-            }
-
-            // Agregar todas las materias asignadas a esa hora y día
-            $disponibilidad[$dia][$hora][] = [
-                'id_docente' => $fila['id_docente'],
-                'nombre_materia' => $fila['nombre_materia'],
-            ];
-        }
-
-        // Hacer la asignación aleatoria para cada celda
-        foreach ($disponibilidad as $dia => &$horas) {
-            foreach ($horas as $hora => &$materias) {
-                if (count($materias) > 0) {
-                    // Selecciona una materia aleatoria de las asignadas
-                    $materiaAleatoria = $materias[array_rand($materias)];
-                    $horas[$hora] = [$materiaAleatoria]; // Sobrescribe con la materia seleccionada
-                }
-            }
-        }
-    }
-
-    return $disponibilidad;
-}
-
-
 
 // Obtener los datos para los filtros
 $materias = obtenerMaterias($conexion);
@@ -161,6 +161,8 @@ $dias = obtenerDiasDeLaSemana($conexion);
 $horas = obtenerHorasDisponibles($conexion);
 $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocente, $filtroCarrera, $filtroSemestre);
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="es">
@@ -304,7 +306,6 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
             <button type="submit" class="btn btn-primary mt-3">Filtrar</button>
             <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Generar Horarios</button>
         </form>
-
         <table class="calendar-table">
     <thead>
         <tr>
@@ -324,12 +325,24 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                         if (isset($disponibilidad[$diaId][$horaId])) {
                             $materias = $disponibilidad[$diaId][$horaId];
                             $numMaterias = count($materias);
-                            $visibleMaterias = array_slice($materias, 0, 3); // Muestra solo las primeras 3 materias
+                            $visibleMaterias = array_slice($materias, 0); // Muestra solo las primeras 3 materias
+                            
+                            // Seleccionar una materia aleatoria
+                            $materiaAleatoriaIndex = array_rand($materias);
+                            $materiaAleatoria = $materias[$materiaAleatoriaIndex];
+
                             foreach ($visibleMaterias as $materia): ?>
-                                <div class="draggable" draggable="true" style="background-color: <?php echo htmlspecialchars($materia['color']); ?>">
-                                    <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                <div class="draggable" draggable="true">
+                                    <?php 
+                                    // Destaca la materia aleatoria
+                                    if ($materia === $materiaAleatoria): ?>
+                                        <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                    <?php else: ?>
+                                        <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach;
+
                             if ($numMaterias > 3): ?>
                                 <div class="more-materias" onclick="showMoreMaterias(this, <?php echo $horaId; ?>, <?php echo $diaId; ?>)">
                                     +<?php echo $numMaterias - 3; ?> más
@@ -342,6 +355,28 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
         <?php endforeach; ?>
     </tbody>
 </table>
+
+
+
+<script>
+    function showMoreMaterias(element, horaId, diaId) {
+        const cell = element.parentElement;
+        cell.querySelectorAll('.more-materias').forEach(moreElem => moreElem.style.display = 'none');
+        
+        // Recargar la celda con todas las materias
+        const materias = <?php echo json_encode($disponibilidad); ?>;
+        const fullMaterias = materias[diaId][horaId];
+        
+        fullMaterias.forEach(materia => {
+            const div = document.createElement('div');
+            div.classList.add('draggable');
+            div.draggable = true;
+            div.innerText = materia.nombre_materia;
+            cell.appendChild(div);
+        });
+    }
+</script>
+
     </div>
 
     <script>
