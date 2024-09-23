@@ -244,6 +244,11 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
             <button type="submit" class="btn btn-primary mt-3">Filtrar</button>
             <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Generar Horarios</button>
         </form>
+
+
+
+
+        
         <table class="calendar-table">
     <thead>
         <tr>
@@ -259,36 +264,25 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                 <td><?php echo $horaNombre; ?></td>
                 <?php foreach ($dias as $diaId => $diaNombre): ?>
                     <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>">
-    <?php
-    if (isset($disponibilidad[$diaId][$horaId])) {
-        $materias = $disponibilidad[$diaId][$horaId];
-        $numMaterias = count($materias);
 
-        // Mostrar todas las materias asignadas
-        foreach ($materias as $materia): ?>
+                    <?php
+if (isset($disponibilidad[$diaId][$horaId])) {
+    // Eliminar materias duplicadas
+    $materias = array_unique($disponibilidad[$diaId][$horaId], SORT_REGULAR); 
+    $numMaterias = count($materias);
+
+    if ($numMaterias > 0) {
+        // Iterar sobre todas las materias y mostrarlas en divs separados
+        foreach ($materias as $materia) { ?>
             <div class="draggable" draggable="true">
                 <?php echo htmlspecialchars($materia['nombre_materia']); ?>
             </div>
-        <?php endforeach;
-
-        // Seleccionar varias materias aleatorias
-        $numAleatorias = min(3, $numMaterias); // Limita a 3 aleatorias o menos si hay menos de 3
-        $aleatoriasIndices = array_rand($materias, $numAleatorias);
-
-        // Asegurarse de que $aleatoriasIndices es un array si hay más de una aleatoria
-        if ($numAleatorias === 1) {
-            $aleatoriasIndices = [$aleatoriasIndices];
+        <?php
         }
-
-        foreach ($aleatoriasIndices as $index) {
-            $materiaAleatoria = $materias[$index]; ?>
-            <div class="draggable" draggable="true" style="background-color: #e0e0e0;">
-                <?php echo htmlspecialchars($materiaAleatoria['nombre_materia']); ?>
-                
-            </div>
-        <?php }
     }
-    ?>
+}
+?>
+
 </td>
            <?php endforeach; ?>
             </tr>
