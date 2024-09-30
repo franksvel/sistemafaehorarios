@@ -249,125 +249,212 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
 
 
         
-        <table class="calendar-table">
-    <thead>
-        <tr>
-            <th>Hora/Día</th>
-            <?php foreach ($dias as $dia): ?>
-                <th><?php echo $dia; ?></th>
-            <?php endforeach; ?>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($horas as $horaId => $horaNombre): ?>
+     
+
+        <form action="guardar_materia_cel.php" method="POST">
+    <table class="calendar-table">
+        <thead>
             <tr>
-                <td><?php echo $horaNombre; ?></td>
-                <?php foreach ($dias as $diaId => $diaNombre): ?>
-                    <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>">
-
-                    <?php
-if (isset($disponibilidad[$diaId][$horaId])) {
-    // Eliminar materias duplicadas
-    $materias = array_unique($disponibilidad[$diaId][$horaId], SORT_REGULAR); 
-    $numMaterias = count($materias);
-
-    if ($numMaterias > 0) {
-        // Iterar sobre todas las materias y mostrarlas en divs separados
-        foreach ($materias as $materia) { ?>
-            <div class="draggable" draggable="true">
-                <?php echo htmlspecialchars($materia['nombre_materia']); ?>
-            </div>
-        <?php
-        }
-    }
-}
-?>
-
-</td>
-           <?php endforeach; ?>
+                <th>Hora/Día</th>
+                <?php foreach ($dias as $dia): ?>
+                    <th><?php echo htmlspecialchars($dia); ?></th>
+                <?php endforeach; ?>
             </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            <?php foreach ($horas as $horaId => $horaNombre): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($horaNombre); ?></td>
+                    <?php foreach ($dias as $diaId => $diaNombre): ?>
+                        <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>" id="celda_<?php echo $diaId; ?>_<?php echo $horaId; ?>">
+                            <!-- Mostrar materias actuales aquí (si existen) -->
+                            <?php if (isset($disponibilidad[$diaId][$horaId])): ?>
+                                <?php foreach ($disponibilidad[$diaId][$horaId] as $materia): ?>
+                                    <div class="draggable" draggable="true">
+                                        <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                        <input type="hidden" name="materias[<?php echo $diaId; ?>][<?php echo $horaId; ?>][]" value="<?php echo htmlspecialchars($materia['nombre_materia']); ?>">
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </td>
+                    <?php endforeach; ?>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <input type="submit" class="btn btn-success" value="Guardar Horario">
+</form>
+
+<!-- Modal para agregar materia -->
+<div class="modal fade" id="modalAgregarMateria" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Agregar Materia</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formAgregarMateria" action="guardar_materia_cel.php" method="post">
+                    <p>Selecciona una materia:</p>
+                    <select name="id_materia" id="selectMateria" class="form-control" required>
+                        <?php foreach ($materias as $materia): ?>
+                            <option value="<?php echo $materia['id_materia']; ?>">
+                                <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p id="materiaSeleccionada" style="margin-top: 10px;">Materia seleccionada: <strong></strong></p>
+                    <input type="hidden" name="celda_id" id="celda_id" value="" />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <input type="submit" class="btn btn-primary" value="Guardar" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openAgregarMateriaModal(horaId, diaId) {
+        // Establecer el valor del campo oculto con el ID de la celda
+        document.getElementById('celda_id').value = `${diaId}_${horaId}`;
+        
+        // Mostrar la materia seleccionada en el párrafo correspondiente
+        const selectMateria = document.getElementById('selectMateria');
+        const materiaSeleccionada = document.getElementById('materiaSeleccionada').querySelector('strong');
+
+        // Cargar la materia seleccionada desde localStorage
+        const storedMateriaId = localStorage.getItem(`materia_${diaId}_${horaId}`);
+        if (storedMateriaId) {
+            selectMateria.value = storedMateriaId;
+            materiaSeleccionada.textContent = selectMateria.options[selectMateria.selectedIndex].text;
+        } else {
+            materiaSeleccionada.textContent = '';
+        }
+
+        selectMateria.addEventListener('change', function () {
+            const selectedText = selectMateria.options[selectMateria.selectedIndex].text;
+            materiaSeleccionada.textContent = selectedText;
+            // Guardar la selección en localStorage
+            localStorage.setItem(`materia_${diaId}_${horaId}`, selectMateria.value);
+        });
+        
+        // Mostrar el modal
+        $('#modalAgregarMateria').modal('show');
+    }
+
+    // Actualizar celda al enviar el formulario
+    document.getElementById("formAgregarMateria").addEventListener("submit", function(event) {
+        event.preventDefault(); // Previene el envío estándar del formulario
+
+        // Obtener el ID de la celda desde el campo oculto
+        var cellId = document.getElementById('celda_id').value;
+        var selectedMateriaId = document.getElementById("selectMateria").value;
+        var selectedText = document.getElementById("selectMateria").options[document.getElementById("selectMateria").selectedIndex].text;
+
+        // Actualizar la celda correspondiente
+        var celda = document.getElementById(`celda_${cellId}`);
+        if (celda) {
+            // Limpiar el contenido de la celda antes de agregar la nueva materia
+            celda.innerHTML = `<div class="draggable">${selectedText}</div>`;
+            
+            // Opcional: resaltar la celda para notar el cambio
+            celda.style.transition = 'background-color 0.5s ease';
+            celda.style.backgroundColor = '#FFFF00'; // Color de fondo amarillo
+            setTimeout(() => {
+                celda.style.backgroundColor = ''; // Restaurar color original
+            }, 500); // Duración del parpadeo
+        }
+
+        // Cerrar el modal
+        $('#modalAgregarMateria').modal('hide');
+
+        // Enviar la materia seleccionada al servidor para que se guarde en la base de datos
+        var formData = new FormData(this);
+        formData.append('cell_id', cellId); // Agregar el ID de la celda
+
+        fetch('guardar_materia_cel.php', { // Cambia esto por la ruta a tu script de servidor
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Manejo de la respuesta del servidor
+            if (data.success) {
+                console.log('Materia guardada con éxito.');
+            } else {
+                console.error('Error al guardar la materia:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error en la solicitud:', error);
+        });
+    });
+</script>
 
 
 
 <script>
-    function showMoreMaterias(element, horaId, diaId) {
-        const cell = element.parentElement;
-        cell.querySelectorAll('.more-materias').forEach(moreElem => moreElem.style.display = 'none');
-        
-        // Recargar la celda con todas las materias
-        const materias = <?php echo json_encode($disponibilidad); ?>;
-        const fullMaterias = materias[diaId][horaId];
-        
-        fullMaterias.forEach(materia => {
-            const div = document.createElement('div');
-            div.classList.add('draggable');
-            div.draggable = true;
-            div.innerText = materia.nombre_materia;
-            cell.appendChild(div);
+    document.addEventListener('DOMContentLoaded', function () {
+        const draggables = document.querySelectorAll('.draggable');
+        const containers = document.querySelectorAll('.docente-cell');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggable.classList.add('dragging');
+            });
+
+            draggable.addEventListener('dragend', () => {
+                draggable.classList.remove('dragging');
+            });
         });
-    }
+
+        containers.forEach(container => {
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const draggable = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    container.appendChild(draggable);
+                } else {
+                    container.insertBefore(draggable, afterElement);
+                }
+                container.classList.add('droppable');
+            });
+
+            container.addEventListener('dragleave', () => {
+                container.classList.remove('droppable');
+            });
+
+            container.addEventListener('drop', () => {
+                container.classList.remove('droppable');
+            });
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+    });
 </script>
 
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const draggables = document.querySelectorAll('.draggable');
-            const containers = document.querySelectorAll('.docente-cell');
-
-            draggables.forEach(draggable => {
-                draggable.addEventListener('dragstart', () => {
-                    draggable.classList.add('dragging');
-                });
-
-                draggable.addEventListener('dragend', () => {
-                    draggable.classList.remove('dragging');
-                });
-            });
-
-            containers.forEach(container => {
-                container.addEventListener('dragover', e => {
-                    e.preventDefault();
-                    const afterElement = getDragAfterElement(container, e.clientY);
-                    const draggable = document.querySelector('.dragging');
-                    if (afterElement == null) {
-                        container.appendChild(draggable);
-                    } else {
-                        container.insertBefore(draggable, afterElement);
-                    }
-                    container.classList.add('droppable');
-                });
-
-                container.addEventListener('dragleave', () => {
-                    container.classList.remove('droppable');
-                });
-
-                container.addEventListener('drop', () => {
-                    container.classList.remove('droppable');
-                });
-            });
-
-            function getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
-
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            }
-        });
-    </script>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
 </body>
 </html>
