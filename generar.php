@@ -262,25 +262,27 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($horas as $horaId => $horaNombre): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($horaNombre); ?></td>
-                    <?php foreach ($dias as $diaId => $diaNombre): ?>
-                        <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>" id="celda_<?php echo $diaId; ?>_<?php echo $horaId; ?>">
-                            <!-- Mostrar materias actuales aquí (si existen) -->
-                            <?php if (isset($disponibilidad[$diaId][$horaId])): ?>
-                                <?php foreach ($disponibilidad[$diaId][$horaId] as $materia): ?>
-                                    <div class="draggable" draggable="true">
-                                        <?php echo htmlspecialchars($materia['nombre_materia']); ?>
-                                        <input type="hidden" name="materias[<?php echo $diaId; ?>][<?php echo $horaId; ?>][]" value="<?php echo htmlspecialchars($materia['nombre_materia']); ?>">
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </td>
-                    <?php endforeach; ?>
-                </tr>
+    <?php foreach ($horas as $horaId => $horaNombre): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($horaNombre); ?></td>
+            <?php foreach ($dias as $diaId => $diaNombre): ?>
+                <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>" id="celda_<?php echo $diaId; ?>_<?php echo $horaId; ?>" 
+                    onclick="openAgregarMateriaModal('<?php echo $horaId; ?>', '<?php echo $diaId; ?>')">
+                    <!-- Mostrar materias actuales aquí (si existen) -->
+                    <?php if (isset($disponibilidad[$diaId][$horaId])): ?>
+                        <?php foreach ($disponibilidad[$diaId][$horaId] as $materia): ?>
+                            <div class="draggable" draggable="true">
+                                <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                <input type="hidden" name="materias[<?php echo $diaId; ?>][<?php echo $horaId; ?>][]" value="<?php echo htmlspecialchars($materia['nombre_materia']); ?>">
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </td>
             <?php endforeach; ?>
-        </tbody>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
+
     </table>
     <input type="submit" class="btn btn-success" value="Guardar Horario">
 </form>
