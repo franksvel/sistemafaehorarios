@@ -246,11 +246,6 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
         </form>
 
 
-
-
-        
-     
-
         <form action="guardar_materia_cel.php" method="POST">
     <table class="calendar-table">
         <thead>
@@ -262,30 +257,37 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
             </tr>
         </thead>
         <tbody>
-    <?php foreach ($horas as $horaId => $horaNombre): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($horaNombre); ?></td>
-            <?php foreach ($dias as $diaId => $diaNombre): ?>
-                <td class="docente-cell" data-dia="<?php echo $diaId; ?>" data-hora="<?php echo $horaId; ?>" id="celda_<?php echo $diaId; ?>_<?php echo $horaId; ?>" 
-                    onclick="openAgregarMateriaModal('<?php echo $horaId; ?>', '<?php echo $diaId; ?>')">
-                    <!-- Mostrar materias actuales aquí (si existen) -->
-                    <?php if (isset($disponibilidad[$diaId][$horaId])): ?>
-                        <?php foreach ($disponibilidad[$diaId][$horaId] as $materia): ?>
-                            <div class="draggable" draggable="true">
-                                <?php echo htmlspecialchars($materia['nombre_materia']); ?>
-                                <input type="hidden" name="materias[<?php echo $diaId; ?>][<?php echo $horaId; ?>][]" value="<?php echo htmlspecialchars($materia['nombre_materia']); ?>">
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </td>
-            <?php endforeach; ?>
-        </tr>
-    <?php endforeach; ?>
-</tbody>
-
+        <?php foreach ($horas as $horaId => $horaNombre): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($horaNombre); ?></td>
+                <?php foreach ($dias as $diaId => $diaNombre): ?>
+                    <td class="docente-cell" 
+                        data-dia="<?php echo $diaId; ?>" 
+                        data-hora="<?php echo $horaId; ?>" 
+                        id="celda_<?php echo $diaId; ?>_<?php echo $horaId; ?>" 
+                        onclick="openAgregarMateriaModal('<?php echo $horaId; ?>', '<?php echo $diaId; ?>')">
+                        
+                        <!-- Mostrar materias actuales aquí (si existen) -->
+                        <?php if (isset($disponibilidad[$diaId][$horaId])): ?>
+                            <?php foreach ($disponibilidad[$diaId][$horaId] as $materia): ?>
+                                <div class="draggable" draggable="true">
+                                    <?php echo htmlspecialchars($materia['nombre_materia']); ?>
+                                    <!-- Input hidden que contendrá el valor de las materias -->
+                                    <input type="hidden" name="materias[<?php echo $diaId; ?>][<?php echo $horaId; ?>][]" value="<?php echo htmlspecialchars($materia['nombre_materia']); ?>">
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </td>
+                <?php endforeach; ?>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
     </table>
+    
     <input type="submit" class="btn btn-success" value="Guardar Horario">
 </form>
+
+
 
 <!-- Modal para agregar materia -->
 <div class="modal fade" id="modalAgregarMateria" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -311,6 +313,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                     <input type="hidden" name="celda_id" id="celda_id" value="" />
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-warning" id="resetearMateria">Resetear</button>
                         <input type="submit" class="btn btn-primary" value="Guardar" />
                     </div>
                 </form>
@@ -318,7 +321,45 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
         </div>
     </div>
 </div>
+<script>
+    document.getElementById("resetearMateria").addEventListener("click", function() {
+    // Obtener el ID de la celda seleccionada
+    var cellId = document.getElementById('celda_id').value;
+    var diaId = cellId.split('_')[0];
+    var horaId = cellId.split('_')[1];
 
+    // Eliminar la materia de localStorage
+    localStorage.removeItem(`materia_${diaId}_${horaId}`);
+
+    // Restaurar la celda para mostrar todas las materias (si estaban previamente)
+    var celda = document.getElementById(`celda_${cellId}`);
+    if (celda) {
+        // Cargar todas las materias seleccionadas previamente
+        const selectMateria = document.getElementById('selectMateria');
+        const options = selectMateria.querySelectorAll('option');
+        let materias = '';
+        
+        // Agregar todas las materias al contenido de la celda
+        options.forEach(option => {
+            materias += `<div class="draggable">${option.text}</div>`;
+        });
+        
+        // Actualizar la celda con todas las materias
+        celda.innerHTML = materias;
+
+        // Resaltar el cambio temporalmente
+        celda.style.transition = 'background-color 0.5s ease';
+        celda.style.backgroundColor = '#FFAAAA'; // Color de fondo rojo claro para resaltar el reset
+        setTimeout(() => {
+            celda.style.backgroundColor = '';
+        }, 500);
+    }
+
+    // Cerrar el modal después de resetear
+    $('#modalAgregarMateria').modal('hide');
+});
+
+</script>
 <script>
     function openAgregarMateriaModal(horaId, diaId) {
         // Establecer el valor del campo oculto con el ID de la celda
@@ -397,7 +438,28 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
     });
 </script>
 
+<script>
+    // Función para cargar las materias guardadas en cada celda al cargar la página
+function cargarMateriasGuardadas() {
+    const celdas = document.querySelectorAll('td'); // Asume que tus celdas son <td>
+    
+    celdas.forEach(celda => {
+        const cellId = celda.id.replace('celda_', ''); // Obtener ID de la celda (formato diaId_horaId)
+        
+        const storedMateriaId = localStorage.getItem(`materia_${cellId}`);
+        if (storedMateriaId) {
+            const selectMateria = document.getElementById('selectMateria'); // Asume que ya tienes un select de materias
+            const selectedText = selectMateria.querySelector(`option[value="${storedMateriaId}"]`).text;
+            
+            celda.innerHTML = `<div class="draggable">${selectedText}</div>`;
+        }
+    });
+}
 
+// Llamar a la función cuando se cargue la página
+document.addEventListener('DOMContentLoaded', cargarMateriasGuardadas);
+
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
