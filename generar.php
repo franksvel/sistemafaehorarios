@@ -384,7 +384,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
             // Guardar la selección en localStorage
             localStorage.setItem(`materia_${diaId}_${horaId}`, selectMateria.value);
         });
-        
+        220
         // Mostrar el modal
         $('#modalAgregarMateria').modal('show');
     }
