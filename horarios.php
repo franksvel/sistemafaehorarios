@@ -179,12 +179,17 @@ $asignaciones_result = mysqli_query($conexion, $asignaciones_query);
                         <td><?php echo htmlspecialchars($row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m']); ?></td>
                         <td><?php echo htmlspecialchars($row['nombre_materia']); ?></td>
                         <td>
-                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#detailsModal"
-                                    data-docente="<?php echo htmlspecialchars($row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m']); ?>"
-                                    data-materia="<?php echo htmlspecialchars($row['nombre_materia']); ?>"
-                                Ver Detalles
-                            </button>
-                        </td>
+                        <a class="btn btn-danger" href="borrarcarrera.php?id_carrera=<?php echo urlencode($mostrar['id_carrera']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
+                        <button 
+                            type="button" 
+                            class="btn btn-primary btn-edit" 
+                            data-toggle="modal" 
+                            data-target="#exampleModal1"
+                            data-id="<?php echo htmlspecialchars($mostrar['id_carrera']); ?>" 
+                            data-nombre="<?php echo htmlspecialchars($mostrar['nombre_c']); ?>">
+                            <i class="fa-sharp fa-solid fa-pencil"></i>
+                        </button>
+                    </td>
                     </tr>
                 <?php
                 }

@@ -79,7 +79,7 @@ $result = mysqli_query($conexion, $sql);
             <thead>
                 <tr>
                     <th>Nombre(s)</th>
-                    <th>Color</th>
+
                     <th>Acción</th>
                 </tr>
             </thead>
@@ -90,10 +90,10 @@ $result = mysqli_query($conexion, $sql);
             ?>
                 <tr>
                     <td><?php echo htmlspecialchars($mostrar['nombre_c']); ?></td>
-                    <td>
+                    <!-- <td>
                         <span class="color-box" style="background-color: <?php echo $color; ?>;"></span>
                         <?php echo $color; ?>
-                    </td>
+                    </td> -->
                     <td>
                         <a class="btn btn-danger" href="borrarcarrera.php?id_carrera=<?php echo urlencode($mostrar['id_carrera']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
                         <button 

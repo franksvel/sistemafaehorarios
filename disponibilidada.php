@@ -165,11 +165,14 @@ while ($row = mysqli_fetch_assoc($result)) {
                                             }
                                             ?>
                                         </td>
+                                  
                                     <?php endforeach; ?>
                                 </tr>
+                                
                             <?php endforeach; ?>
                         <?php endforeach; ?>
-                    <?php endforeach; ?>                    
+                    <?php endforeach; ?> 
+                                       
                 </tbody>
             </table>
         </div>
@@ -267,6 +270,8 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     ?>
                                 </div>
                             </div>
+                                
+                           
                             <input type="submit" class="btn btn-primary" value="Guardar">
                         </form>
                     </div>
