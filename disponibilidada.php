@@ -120,62 +120,82 @@ while ($row = mysqli_fetch_assoc($result)) {
         </div>
       
         <div class="container mt-4">
-            <table class="calendar-table">
-                <thead>
-                    <tr>
-                        <th>Docente</th>
-                        <th>Carrera</th>
-                        <th>Semestre</th>
+   
+        <table class="calendar-table">
+    <thead>
+        <tr>
+            <th>Docente</th>
+            <th>Carrera</th>
+            <th>Semestre</th>
 
-                        <?php
-                        // Obtener todos los días únicos
-                        $dias_unicos = [];
-                        foreach ($disponibilidad as $docente => $carreras) {
-                            foreach ($carreras as $carrera => $semestres) {
-                                foreach ($semestres as $semestre => $dias) {
-                                    foreach ($dias as $dia => $horas) {
-                                        if (!in_array($dia, $dias_unicos)) {
-                                            $dias_unicos[] = $dia;
-                                        }
-                                    }
-                                }
+            <?php
+            // Obtener todos los días únicos
+            $dias_unicos = [];
+            foreach ($disponibilidad as $docente => $carreras) {
+                foreach ($carreras as $carrera => $semestres) {
+                    foreach ($semestres as $semestre => $dias) {
+                        foreach ($dias as $dia => $horas) {
+                            if (!in_array($dia, $dias_unicos)) {
+                                $dias_unicos[] = $dia;
                             }
                         }
-                        foreach ($dias_unicos as $dia): ?>
-                            <th><?php echo htmlspecialchars($dia); ?></th>
+                    }
+                }
+            }
+            foreach ($dias_unicos as $dia): ?>
+                <th><?php echo htmlspecialchars($dia); ?></th>
+            <?php endforeach; ?>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($disponibilidad as $docente => $carreras): ?>
+            <?php foreach ($carreras as $carrera => $semestres): ?>
+                <?php foreach ($semestres as $semestre => $dias): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($docente); ?></td>
+                        <td><?php echo htmlspecialchars($carrera); ?></td>
+                        <td><?php echo htmlspecialchars($semestre); ?></td>
+                        <?php foreach ($dias_unicos as $dia): ?>
+                            <td>
+                                <?php
+                                // Mostrar las horas para el día específico
+                                echo isset($dias[$dia]) ? implode(', ', $dias[$dia]) : "No disponible";
+                                ?>
+                            </td>
                         <?php endforeach; ?>
+
+                        <!-- Columna de botones de acción -->
+                        <td>
+                            <?php
+                            // Asegúrate de que el $general esté disponible y tenga el valor correcto
+                            $general_id = isset($general) ? $general : ''; // Reemplaza esto si el id_general se obtiene de otra manera
+                            ?>
+                            <a class="btn btn-danger" 
+                               href="borrardisponibi.php?id_general=<?php echo urlencode($general_id); ?>"
+                               onclick="return confirm('¿Estás seguro de que deseas eliminar toda la disponibilidad?');">
+                                <i class="fa-sharp fa-solid fa-trash"></i>
+                            </a>
+
+                            <button 
+                                type="button" 
+                                class="btn btn-primary btn-edit" 
+                                data-toggle="modal" 
+                                data-target="#exampleModal1"
+                                data-id="<?php echo htmlspecialchars($carrera); ?>" 
+                                data-nombre="<?php echo htmlspecialchars($semestre); ?>">
+                                <i class="fa-sharp fa-solid fa-pencil"></i>
+                            </button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($disponibilidad as $docente => $carreras): ?>
-                        <?php foreach ($carreras as $carrera => $semestres): ?>
-                            <?php foreach ($semestres as $semestre => $dias): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($docente); ?></td>
-                                    <td><?php echo htmlspecialchars($carrera); ?></td>
-                                    <td><?php echo htmlspecialchars($semestre); ?></td>
-                                    <?php foreach ($dias_unicos as $dia): ?>
-                                        <td>
-                                            <?php
-                                            // Mostrar las horas para el día específico
-                                            if (isset($dias[$dia])) {
-                                                echo implode(', ', $dias[$dia]);
-                                            } else {
-                                                echo "No disponible";
-                                            }
-                                            ?>
-                                        </td>
-                                  
-                                    <?php endforeach; ?>
-                                </tr>
-                                
-                            <?php endforeach; ?>
-                        <?php endforeach; ?>
-                    <?php endforeach; ?> 
-                                       
-                </tbody>
-            </table>
-        </div>
+                <?php endforeach; ?>
+            <?php endforeach; ?>
+        <?php endforeach; ?> 
+    </tbody>
+</table>
+
+</div>
+
 
         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">

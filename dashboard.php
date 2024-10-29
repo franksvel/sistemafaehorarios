@@ -75,7 +75,7 @@ $service = new Google_Service_Gmail($client);
             <p class="card-description">Está diseñado para optimizar el tiempo en un formato compacto.</p>
         </div>
     </a>
-        <a href="#">
+        <a href="visualizar.php">
         <div class="card">
             <i class="fas fa-eye card-icon"></i>
             <h2 class="card-title">Visualizar</h2>

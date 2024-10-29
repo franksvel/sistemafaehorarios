@@ -194,7 +194,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
         </nav>
         <h2>Generar Horarios</h2>
 
-        <form method="get" class="mb-4">
+        <!-- <form method="get" class="mb-4">
             <div class="form-row">
                 <div class="col-md-3">
                     <label for="filtroMateria">Materia</label>
@@ -241,7 +241,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">Filtrar</button>
+            <button type="submit" class="btn btn-primary mt-3">Filtrar</button> -->
             <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Generar Horarios</button>
         </form>
 
@@ -360,6 +360,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
 });
 
 </script>
+
 <script>
     function openAgregarMateriaModal(horaId, diaId) {
         // Establecer el valor del campo oculto con el ID de la celda
