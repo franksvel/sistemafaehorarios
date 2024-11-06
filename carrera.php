@@ -163,6 +163,13 @@ $result = mysqli_query($conexion, $sql);
             </div>
         </div>
     </div>
+    <script>
+    // Convertir a mayúsculas mientras el usuario escribe
+    document.getElementById('nombre').addEventListener('input', function() {
+        // Cambia el valor del input a mayúsculas
+        this.value = this.value.toUpperCase();
+    });
+</script>
 
     <script>
         $(document).ready(function() {

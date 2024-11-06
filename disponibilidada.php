@@ -39,25 +39,26 @@ $result = mysqli_query($conexion, $sql);
 // Agrupación de datos
 $disponibilidad = [];
 while ($row = mysqli_fetch_assoc($result)) {
+    $docente_id = $row['id_docente'];
     $docente = $row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m'];
     $carrera = $row['nombre_c'];
     $dia = $row['nombre_dia'];
     $hora = $row['nombre_hora'];
     $semestre = $row['semestre_nombre'];
 
-    if (!isset($disponibilidad[$docente])) {
-        $disponibilidad[$docente] = [];
+    if (!isset($disponibilidad[$docente_id])) {
+        $disponibilidad[$docente_id] = ['nombre' => $docente, 'carreras' => []];
     }
-    if (!isset($disponibilidad[$docente][$carrera])) {
-        $disponibilidad[$docente][$carrera] = [];
+    if (!isset($disponibilidad[$docente_id]['carreras'][$carrera])) {
+        $disponibilidad[$docente_id]['carreras'][$carrera] = [];
     }
-    if (!isset($disponibilidad[$docente][$carrera][$semestre])) {
-        $disponibilidad[$docente][$carrera][$semestre] = [];
+    if (!isset($disponibilidad[$docente_id]['carreras'][$carrera][$semestre])) {
+        $disponibilidad[$docente_id]['carreras'][$carrera][$semestre] = [];
     }
-    if (!isset($disponibilidad[$docente][$carrera][$semestre][$dia])) {
-        $disponibilidad[$docente][$carrera][$semestre][$dia] = [];
+    if (!isset($disponibilidad[$docente_id]['carreras'][$carrera][$semestre][$dia])) {
+        $disponibilidad[$docente_id]['carreras'][$carrera][$semestre][$dia] = [];
     }
-    $disponibilidad[$docente][$carrera][$semestre][$dia][] = $hora;
+    $disponibilidad[$docente_id]['carreras'][$carrera][$semestre][$dia][] = $hora;
 }
 ?>
 
@@ -70,25 +71,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .calendar-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .calendar-table th, .calendar-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        .calendar-table th {
-            background-color: #f2f2f2;
-        }
-        .calendar-table td {
-            height: 100px;
-            vertical-align: top;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
     <div class="container mt-5">
@@ -120,94 +103,76 @@ while ($row = mysqli_fetch_assoc($result)) {
         </div>
       
         <div class="container mt-4">
-   
-        <table class="calendar-table">
-    <thead>
-        <tr>
-            <th>Docente</th>
-            <th>Carrera</th>
-            <th>Semestre</th>
-
-            <?php
-            // Obtener todos los días únicos
-            $dias_unicos = [];
-            foreach ($disponibilidad as $docente => $carreras) {
-                foreach ($carreras as $carrera => $semestres) {
-                    foreach ($semestres as $semestre => $dias) {
-                        foreach ($dias as $dia => $horas) {
-                            if (!in_array($dia, $dias_unicos)) {
-                                $dias_unicos[] = $dia;
+            <table class="calendar-table">
+                <thead>
+                    <tr>
+                        <th>Docente</th>
+                        <th>Carrera</th>
+                        <th>Semestre</th>
+                        <?php
+                        // Obtener todos los días únicos
+                        $dias_unicos = [];
+                        foreach ($disponibilidad as $docente_info) {
+                            foreach ($docente_info['carreras'] as $semestres) {
+                                foreach ($semestres as $dias) {
+                                    foreach ($dias as $dia => $horas) {
+                                        if (!in_array($dia, $dias_unicos)) {
+                                            $dias_unicos[] = $dia;
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                }
-            }
-            foreach ($dias_unicos as $dia): ?>
-                <th><?php echo htmlspecialchars($dia); ?></th>
-            <?php endforeach; ?>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($disponibilidad as $docente => $carreras): ?>
-            <?php foreach ($carreras as $carrera => $semestres): ?>
-                <?php foreach ($semestres as $semestre => $dias): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($docente); ?></td>
-                        <td><?php echo htmlspecialchars($carrera); ?></td>
-                        <td><?php echo htmlspecialchars($semestre); ?></td>
-                        <?php foreach ($dias_unicos as $dia): ?>
-                            <td>
-                                <?php
-                                // Mostrar las horas para el día específico
-                                echo isset($dias[$dia]) ? implode(', ', $dias[$dia]) : "No disponible";
-                                ?>
-                            </td>
+                        foreach ($dias_unicos as $dia): ?>
+                            <th><?php echo htmlspecialchars($dia); ?></th>
                         <?php endforeach; ?>
-
-                        <!-- Columna de botones de acción -->
-                        <td>
-                            <?php
-                            // Asegúrate de que el $general esté disponible y tenga el valor correcto
-                            $general_id = isset($general) ? $general : ''; // Reemplaza esto si el id_general se obtiene de otra manera
-                            ?>
-                            <a class="btn btn-danger" 
-                               href="borrardisponibi.php?id_general=<?php echo urlencode($general_id); ?>"
-                               onclick="return confirm('¿Estás seguro de que deseas eliminar toda la disponibilidad?');">
-                                <i class="fa-sharp fa-solid fa-trash"></i>
-                            </a>
-
-                            <button 
-                                type="button" 
-                                class="btn btn-primary btn-edit" 
-                                data-toggle="modal" 
-                                data-target="#exampleModal1"
-                                data-id="<?php echo htmlspecialchars($carrera); ?>" 
-                                data-nombre="<?php echo htmlspecialchars($semestre); ?>">
-                                <i class="fa-sharp fa-solid fa-pencil"></i>
-                            </button>
-                        </td>
+                        <th>Acciones</th>
                     </tr>
-                <?php endforeach; ?>
-            <?php endforeach; ?>
-        <?php endforeach; ?> 
-    </tbody>
-</table>
+                </thead>
+                <tbody>
+                    <?php foreach ($disponibilidad as $docente_id => $docente_info): ?>
+                        <?php foreach ($docente_info['carreras'] as $carrera => $semestres): ?>
+                            <?php foreach ($semestres as $semestre => $dias): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($docente_info['nombre']); ?></td>
+                                    <td><?php echo htmlspecialchars($carrera); ?></td>
+                                    <td><?php echo htmlspecialchars($semestre); ?></td>
+                                    <?php foreach ($dias_unicos as $dia): ?>
+                                        <td>
+                                            <?php
+                                            echo isset($dias[$dia]) ? implode(', ', $dias[$dia]) : "No disponible";
+                                            ?>
+                                        </td>
+                                    <?php endforeach; ?>
+                                    <td>
+                                    <button class="btn btn-danger" onclick="borrarDisponibilidad('<?php echo htmlspecialchars($row['id_general'], ENT_QUOTES, 'UTF-8'); ?>')">
+    <i class="fa-sharp fa-solid fa-trash"></i>
+</button>
 
-</div>
 
 
-        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Disponibilidad del docente</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="guardardispo.php" method="POST">
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para agregar disponibilidad -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Disponibilidad del docente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                <form action="guardardispo.php" method="POST">
                             <div class="form-group">
                                 <label for="id_docente">Selecciona el nombre de docente*</label>
                                 <select name="id_docente" id="id_docente" class="form-control" required>
@@ -294,13 +259,55 @@ while ($row = mysqli_fetch_assoc($result)) {
                            
                             <input type="submit" class="btn btn-primary" value="Guardar">
                         </form>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function borrarDisponibilidad(id) {
+        console.log(id);
+        // Confirmar si realmente se desea eliminar el registro
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "¡No podrás recuperar este registro!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminarlo',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Enviar la solicitud AJAX para eliminar el registro
+                fetch('borrardisponibi.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'id_general=' + id
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Eliminado', 'El registro fue eliminado con éxito', 'success')
+                            .then(() => {
+                                // Recargar la página o eliminar el registro del DOM
+                                location.reload(); // Recarga la página
+                            });
+                    } else {
+                        Swal.fire('Error', 'Hubo un problema al eliminar el registro', 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'Hubo un problema con la conexión', 'error');
+                });
+            }
+        });
+    }
+</script>
+
+
 </body>
 </html>

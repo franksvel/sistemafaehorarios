@@ -1,5 +1,4 @@
 <?php
-
 include 'db.php';
 
 // Verifica si se ha proporcionado un ID de materia
@@ -10,8 +9,8 @@ if (isset($_GET['id_materia']) && is_numeric($_GET['id_materia'])) {
     $stmt = $conexion->prepare("DELETE FROM materia WHERE id_materia = ?");
     $stmt->bind_param("i", $id);
     
-    if ($stmt->execute()) {
-        // Si la eliminación es exitosa, redirige con SweetAlert2
+    // Función para mostrar alertas SweetAlert
+    function mostrarAlerta($titulo, $mensaje, $icono, $redireccion) {
         echo '<!DOCTYPE html>
               <html>
               <head>
@@ -21,36 +20,13 @@ if (isset($_GET['id_materia']) && is_numeric($_GET['id_materia'])) {
               <body>
                 <script>
                   Swal.fire({
-                    title: "Eliminado",
-                    text: "El registro se ha eliminado con éxito.",
-                    icon: "success",
+                    title: "' . $titulo . '",
+                    text: "' . $mensaje . '",
+                    icon: "' . $icono . '",
                     confirmButtonText: "Aceptar"
                   }).then((result) => {
                     if (result.isConfirmed) {
-                      window.location.href = "materia.php";
-                    }
-                  });
-                </script>
-              </body>
-              </html>';
-    } else {
-        // Si la eliminación falla, muestra un error
-        echo '<!DOCTYPE html>
-              <html>
-              <head>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-              </head>
-              <body>
-                <script>
-                  Swal.fire({
-                    title: "Error",
-                    text: "La eliminación del registro falló.",
-                    icon: "error",
-                    confirmButtonText: "Aceptar"
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      window.location.href = "materia.php";
+                      window.location.href = "' . $redireccion . '";
                     }
                   });
                 </script>
@@ -58,32 +34,18 @@ if (isset($_GET['id_materia']) && is_numeric($_GET['id_materia'])) {
               </html>';
     }
 
+    // Ejecuta la consulta y muestra la alerta adecuada
+    if ($stmt->execute()) {
+        mostrarAlerta("Eliminado", "El registro se ha eliminado con éxito.", "success", "materia.php");
+    } else {
+        mostrarAlerta("Error", "La eliminación del registro falló.", "error", "materia.php");
+    }
+
     // Cierra la consulta y la conexión a la base de datos
     $stmt->close();
-    mysqli_close($conexion);
+    $conexion->close();
 } else {
     // Si no se proporciona un ID, muestra un mensaje de error
-    echo '<!DOCTYPE html>
-          <html>
-          <head>
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-          </head>
-          <body>
-            <script>
-              Swal.fire({
-                title: "Error",
-                text: "No se ha proporcionado ningún ID de materia.",
-                icon: "error",
-                confirmButtonText: "Aceptar"
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  window.location.href = "materia.php";
-                }
-              });
-            </script>
-          </body>
-          </html>';
+    mostrarAlerta("Error", "No se ha proporcionado ningún ID de materia.", "error", "materia.php");
 }
-
 ?>

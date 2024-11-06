@@ -194,54 +194,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
         </nav>
         <h2>Generar Horarios</h2>
 
-        <!-- <form method="get" class="mb-4">
-            <div class="form-row">
-                <div class="col-md-3">
-                    <label for="filtroMateria">Materia</label>
-                    <select name="filtroMateria" id="filtroMateria" class="form-control">
-                        <option value="">Todas</option>
-                        <?php foreach ($materias as $materia): ?>
-                            <option value="<?php echo $materia['id_materia']; ?>" <?php echo ($filtroMateria == $materia['id_materia']) ? 'selected' : ''; ?>>
-                                <?php echo $materia['nombre_materia']; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="filtroDocente">Docente</label>
-                    <select name="filtroDocente" id="filtroDocente" class="form-control">
-                        <option value="">Todos</option>
-                        <?php foreach ($docentes as $docente): ?>
-                            <option value="<?php echo $docente['id_docente']; ?>" <?php echo ($filtroDocente == $docente['id_docente']) ? 'selected' : ''; ?>>
-                                <?php echo $docente['nombre_d']; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="filtroCarrera">Carrera</label>
-                    <select name="filtroCarrera" id="filtroCarrera" class="form-control">
-                        <option value="">Todas</option>
-                        <?php foreach ($carreras as $carrera): ?>
-                            <option value="<?php echo $carrera['id_carrera']; ?>" <?php echo ($filtroCarrera == $carrera['id_carrera']) ? 'selected' : ''; ?>>
-                                <?php echo $carrera['nombre_c']; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="filtroSemestre">Semestre</label>
-                    <select name="filtroSemestre" id="filtroSemestre" class="form-control">
-                        <option value="">Todos</option>
-                        <?php foreach ($semestres as $semestre): ?>
-                            <option value="<?php echo $semestre; ?>" <?php echo ($filtroSemestre == $semestre) ? 'selected' : ''; ?>>
-                                <?php echo $semestre; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary mt-3">Filtrar</button> -->
+         <form method="get" class="mb-4">
             <button type="submit" name="refrescar" value="1" class="btn btn-secondary mt-3">Generar Horarios</button>
         </form>
 
@@ -300,7 +253,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                 </button>
             </div>
             <div class="modal-body">
-                <form id="formAgregarMateria" action="guardar_materia_cel.php" method="post">
+                <form id="formAgregarMateria" action="guardar_materia_cel.php" method="POST">
                     <p>Selecciona una materia:</p>
                     <select name="id_materia" id="selectMateria" class="form-control" required>
                         <?php foreach ($materias as $materia): ?>
@@ -310,7 +263,7 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
                         <?php endforeach; ?>
                     </select>
                     <p id="materiaSeleccionada" style="margin-top: 10px;">Materia seleccionada: <strong></strong></p>
-                    <input type="hidden" name="celda_id" id="celda_id" value="" />
+                    <input type="hidden" name="celda_id" id="celda_id" value="Guardar" />
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                         <button type="button" class="btn btn-warning" id="resetearMateria">Resetear</button>
@@ -323,43 +276,67 @@ $disponibilidad = obtenerDisponibilidad($conexion, $filtroMateria, $filtroDocent
 </div>
 <script>
     document.getElementById("resetearMateria").addEventListener("click", function() {
-    // Obtener el ID de la celda seleccionada
-    var cellId = document.getElementById('celda_id').value;
-    var diaId = cellId.split('_')[0];
-    var horaId = cellId.split('_')[1];
+        // Obtener el ID de la celda seleccionada
+        var cellId = document.getElementById('celda_id').value;
+        var diaId = cellId.split('_')[0];
+        var horaId = cellId.split('_')[1];
 
-    // Eliminar la materia de localStorage
-    localStorage.removeItem(`materia_${diaId}_${horaId}`);
+        // Eliminar la materia de localStorage
+        var materiaKey = `materia_${diaId}_${horaId}`;
+        var materiaData = localStorage.getItem(materiaKey);
+        localStorage.removeItem(materiaKey);
 
-    // Restaurar la celda para mostrar todas las materias (si estaban previamente)
-    var celda = document.getElementById(`celda_${cellId}`);
-    if (celda) {
-        // Cargar todas las materias seleccionadas previamente
-        const selectMateria = document.getElementById('selectMateria');
-        const options = selectMateria.querySelectorAll('option');
-        let materias = '';
-        
-        // Agregar todas las materias al contenido de la celda
-        options.forEach(option => {
-            materias += `<div class="draggable">${option.text}</div>`;
-        });
-        
-        // Actualizar la celda con todas las materias
-        celda.innerHTML = materias;
+        // Restaurar la celda para mostrar todas las materias (si estaban previamente)
+        var celda = document.getElementById(`celda_${cellId}`);
+        if (celda) {
+            // Cargar todas las materias seleccionadas previamente
+            const selectMateria = document.getElementById('selectMateria');
+            const options = selectMateria.querySelectorAll('option');
+            let materias = '';
 
-        // Resaltar el cambio temporalmente
-        celda.style.transition = 'background-color 0.5s ease';
-        celda.style.backgroundColor = '#FFAAAA'; // Color de fondo rojo claro para resaltar el reset
-        setTimeout(() => {
-            celda.style.backgroundColor = '';
-        }, 500);
-    }
+            // Agregar todas las materias al contenido de la celda
+            options.forEach(option => {
+                materias += `<div class="draggable">${option.text}</div>`;
+            });
 
-    // Cerrar el modal después de resetear
-    $('#modalAgregarMateria').modal('hide');
-});
+            // Actualizar la celda con todas las materias
+            celda.innerHTML = materias;
 
+            // Resaltar el cambio temporalmente
+            celda.style.transition = 'background-color 0.5s ease';
+            celda.style.backgroundColor = '#FFAAAA'; // Color de fondo rojo claro para resaltar el reset
+            setTimeout(() => {
+                celda.style.backgroundColor = '';
+            }, 500);
+        }
+
+        // Enviar la información del localStorage al servidor mediante AJAX
+        if (materiaData) {
+            // Crear un objeto de materias para enviar al servidor
+            var materiasData = {
+                [diaId]: {
+                    [horaId]: [materiaData]
+                }
+            };
+
+            // Convertir el objeto a un formato JSON para enviar
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "guardar_materia_cel.php", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log('Datos enviados a la base de datos');
+                }
+            };
+            xhr.send(JSON.stringify({ materias: materiasData }));
+        }
+
+        // Cerrar el modal después de resetear
+        $('#modalAgregarMateria').modal('hide');
+    });
 </script>
+
+
 
 <script>
     function openAgregarMateriaModal(horaId, diaId) {

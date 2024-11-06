@@ -78,46 +78,7 @@ $service = new Google_Service_Gmail($client);
             <h2 class="card-title">Usuarios</h2>
             <p class="card-description">Encuentra soluciones para tu entorno laboral.</p>
         </div>
-        </a>
-        <a href="docentes.php">
-        <div class="card">
-            <i class="fas fa-chalkboard-user card-icon"></i>
-            <h2 class="card-title">Docentes</h2>
-            <p class="card-description">Mejora tu salud con nuestros consejos.</p>
-        </div>
-         </a>
-         <a href="materia.php">
-        <div class="card">
-            <i class="fas fa-book card-icon"></i>
-            <h2 class="card-title">Materia</h2>
-            <p></p>
-        </div>
-         </a>
-    </div>
-    
-    <a href="carrera.php">
-    <div class="card-container">
-        <div class="card">
-            <i class="fas fa-school card-icon"></i>
-            <h2 class="card-title">Carrera</h2>
-            <p class="card-description">Explora nuestras opciones para el hogar.</p>
-        </div>
-    </a>
-        <a href="disponibilidada.php">
-        <div class="card">
-            <i class="fas fa-briefcase card-icon"></i>
-            <h2 class="card-title">Disponibilidad</h2>
-            <p class="card-description">Encuentra soluciones para tu entorno laboral.</p>
-        </div>
-         </a>
-         <a href="horarios.php">
-         <div class="card">
-            <i class="fas fa-check card-icon"></i>
-            <h2 class="card-title">Asignar</h2>
-            <p class="card-description">Mejora tu salud con nuestros consejos.</p>
-        </div>
-         </a>
-         <a href="soporte.php">
+        <a href="soporte.php">
          <div class="card">
             <i class="fas fa-headset card-icon"></i>
             <h2 class="card-title">Soporte</h2>
@@ -125,6 +86,9 @@ $service = new Google_Service_Gmail($client);
         </div>
          </a>
     </div>
+    
+   
+
     
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

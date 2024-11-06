@@ -142,65 +142,124 @@ $asignaciones_result = mysqli_query($conexion, $asignaciones_query);
     </div>
 
     <!-- Modal de Detalles -->
-    <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailsModalLabel">Detalles de la Asignación</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Docente:</strong> <span id="modal-docente"></span></p>
-                    <p><strong>Materia:</strong> <span id="modal-materia"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                </div>
+ <!-- Modal para Editar Asignación -->
+ <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Asignación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm" action="edit_asignacion.php" method="POST">
+                    <input type="hidden" name="id_docente" id="edit_id_docente">
+                    <input type="hidden" name="id_materia" id="edit_id_materia">
+                    <div class="form-group">
+                        <label for="edit_docente">Docente</label>
+                        <select name="id_docente" id="edit_docente" class="form-control" required>
+                            <?php
+                            // Reiniciar el cursor de mysqli
+                            mysqli_data_seek($docentes_result, 0); 
+                            while ($row = mysqli_fetch_array($docentes_result)) {
+                                $id = $row['id_docente'];
+                                $nombre = $row['nombre_d'];
+                                $apellido = $row['apellido_p'];
+                                $apellidom = $row['apellido_m'];
+                                echo "<option value='$id'>$nombre $apellido $apellidom</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_materia">Materia</label>
+                        <select name="id_materia" id="edit_materia" class="form-control" required>
+                            <?php
+                            // Reiniciar el cursor de mysqli
+                            mysqli_data_seek($materias_result, 0); 
+                            while ($row = mysqli_fetch_array($materias_result)) {
+                                $id = $row['id_materia'];
+                                $nombre = $row['nombre_materia'];
+                                echo "<option value='$id'>$nombre</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+
 
     <div class="container">
-        <table class="table m-2 mt-4">
-            <thead>
-                <tr>
-                    <th>Docente</th>
-                    <th>Materia</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                while ($row = mysqli_fetch_array($asignaciones_result)) {
-                ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m']); ?></td>
-                        <td><?php echo htmlspecialchars($row['nombre_materia']); ?></td>
-                        <td>
-                        <a class="btn btn-danger" href="borrarcarrera.php?id_carrera=<?php echo urlencode($mostrar['id_carrera']); ?>"><i class="fa-sharp fa-solid fa-trash"></i></a>
-                        <button 
-                            type="button" 
-                            class="btn btn-primary btn-edit" 
-                            data-toggle="modal" 
-                            data-target="#exampleModal1"
-                            data-id="<?php echo htmlspecialchars($mostrar['id_carrera']); ?>" 
-                            data-nombre="<?php echo htmlspecialchars($mostrar['nombre_c']); ?>">
-                            <i class="fa-sharp fa-solid fa-pencil"></i>
-                        </button>
-                    </td>
-                    </tr>
-                <?php
-                }
-                ?>
-            </tbody>
-        </table>
+    <table class="table m-2 mt-4">
+    <thead>
+        <tr>
+            <th>Docente</th>
+            <th>Materia</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        while ($row = mysqli_fetch_array($asignaciones_result)) {
+        ?>
+            <tr>
+                <td><?php echo htmlspecialchars($row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m']); ?></td>
+                <td><?php echo htmlspecialchars($row['nombre_materia']); ?></td>
+                <td>
+    <a class="btn btn-danger" href="borrarasignacion.php?id_docente=<?php echo urlencode($row['id_docente']); ?>&amp;id_materia=<?php echo urlencode($row['id_materia']); ?>">
+        <i class="fa-sharp fa-solid fa-trash"></i>
+    </a>
+    <button 
+    type="button" 
+    class="btn btn-primary btn-edit" 
+    data-toggle="modal" 
+    data-target="#editModal"
+    data-id-docente="<?php echo htmlspecialchars($row['id_docente']); ?>" 
+    data-id-materia="<?php echo htmlspecialchars($row['id_materia']); ?>" 
+    data-docente="<?php echo htmlspecialchars($row['nombre_d'] . ' ' . $row['apellido_p'] . ' ' . $row['apellido_m']); ?>" 
+    data-materia="<?php echo htmlspecialchars($row['nombre_materia']); ?>">
+    <i class="fa-sharp fa-solid fa-pencil"></i>
+</button>
+
+</td>
+
+            </tr>
+        <?php
+        }
+        ?>
+    </tbody>
+</table>
+
+
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+    $(document).ready(function () {
+        // Cuando se abre el modal de edición
+        $('#editModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Botón que abrió el modal
+            var idDocente = button.data('id-docente');
+            var idMateria = button.data('id-materia');
+            var docente = button.data('docente');
+            var materia = button.data('materia');
+
+            // Actualiza los campos del modal
+            var modal = $(this);
+            modal.find('#edit_id_docente').val(idDocente);
+            modal.find('#edit_id_materia').val(idMateria);
+            modal.find('#edit_docente').val(idDocente); // Asegúrate de que esto esté correcto si necesitas el nombre completo
+            modal.find('#edit_materia').val(idMateria); // Asegúrate de que esto esté correcto si necesitas el nombre de la materia
+        });
+    });
+</script>
 
     <script>
         $(document).ready(function () {
